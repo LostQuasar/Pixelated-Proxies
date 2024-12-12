@@ -40,7 +40,7 @@ def enchance_art_crop(code, num):
 
 def generate_ascii_art(code, num):
     Popen(
-        f'image-to-ascii enhanced/{code}-{num}.jpg -w124 -b0 -o ascii/{code}-{num}.png',
+        f'image-to-ascii enhanced/{code}-{num}.jpg -w136 -b0 -o ascii/{code}-{num}.png',
         shell=True
     )
     time.sleep(.1)
@@ -111,11 +111,10 @@ with open('input.csv', 'r') as file:
         font_medium = ImageFont.truetype('Hack-Regular.ttf', 75)
         font_ital = ImageFont.truetype('Hack-Italic.ttf', 75)
         font_small = ImageFont.truetype('Hack-Regular.ttf', 60)
+        font_small_ital = ImageFont.truetype('Hack-Italic.ttf', 60)
         draw = ImageDraw.Draw(card_img)
-        text_len = draw.textlength(
-            card['mana_cost'], font=font_bold, direction='rtl', language='en'
-        )
         draw.text((INCH / 6, INCH / 6), f'> {card["name"]}', font=font_bold)
+        text_len = draw.textlength(card['mana_cost'], font=font_bold)
         draw.text(
             (WIDTH - INCH / 6 - text_len, INCH / 6), card['mana_cost'], font=font_bold
         )
@@ -142,7 +141,15 @@ with open('input.csv', 'r') as file:
             f'{card["collector_number"].zfill(3)}/{set_count} {RARITY[card["rarity"]]}\n{str(card["set"]).upper()} >{card["artist"]}',
             font=font_small
         )
-
+        proxy_text = "LostQuasar Proxy"
+        text_len = draw.textlength(proxy_text,font=font_small_ital)
+        draw.text((WIDTH - INCH / 6 - text_len, HEIGHT - INCH / 6 -  60), proxy_text, font=font_small_ital)
+        if 'power' in card:
+            creature_text = f'({card['power']}/{card["toughness"]})'
+            text_len = draw.textlength(creature_text, font=font_bold)
+            draw.text(
+                (WIDTH - INCH / 6 - text_len, HEIGHT - INCH / 6 - (90 + 60 + 10)), creature_text, font=font_bold
+            )
         card_img.save(f'cards/{code}-{num}.png')
         gen_count+=1
         time.sleep(0.300 + (random.randint(0, 100) / 100))
