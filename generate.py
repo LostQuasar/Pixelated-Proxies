@@ -45,6 +45,16 @@ def generate_ascii_art(code, num):
     )
     time.sleep(.1)
 
+def hard_wrap(s, n, indent):
+    wrapped = ""
+    n_next = n - len(indent)
+    for l in s.split('\n'):
+        first, rest = l[:n], l[n:]
+        wrapped += first + "\n"
+        while rest:
+            next, rest = rest[:n_next], rest[n_next:]
+            wrapped += indent + next + "\n"
+    return wrapped
 
 down_count=0
 ascii_count=0
@@ -98,8 +108,8 @@ with open('input.csv', 'r') as file:
             )
         font_bold = ImageFont.truetype('Hack-Bold.ttf', 90)
         font_bold_small = ImageFont.truetype('Hack-Bold.ttf', 80)
-        font_medium = ImageFont.truetype('Hack-Regular.ttf', 70)
-        font_ital = ImageFont.truetype('Hack-Italic.ttf', 80)
+        font_medium = ImageFont.truetype('Hack-Regular.ttf', 75)
+        font_ital = ImageFont.truetype('Hack-Italic.ttf', 75)
         font_small = ImageFont.truetype('Hack-Regular.ttf', 60)
         draw = ImageDraw.Draw(card_img)
         text_len = draw.textlength(
@@ -114,17 +124,22 @@ with open('input.csv', 'r') as file:
             str(card['type_line']).replace('—', '-'),
             font=font_bold_small
         )
-        body_text = '\n'.join(wrap(card['oracle_text'], width=40, replace_whitespace=False, break_on_hyphens=False))
+
+        body_text = []
+        for line in card['oracle_text'].split("\n"):
+            line = "\n".join(wrap(line, width=40))
+            body_text.append(line)
+        body_text = "\n".join(body_text)
         draw.text((INCH / 4, INCH * 2.25), body_text, font=font_medium)
         if 'flavor_text' in card:
             draw.text(
                 (INCH / 4, INCH * 2.25 + (body_text.count('\n') + 2) * 80),
-                '\n'.join(wrap(card['flavor_text'], width=38)),
+                '\n'.join(wrap(card['flavor_text'], width=38,replace_whitespace=False, break_on_hyphens=False, break_long_words=False)),
                 font=font_ital
             )
         draw.text(
             (INCH / 6, HEIGHT - INCH / 6 - 120),
-            f'{card["collector_number"]}/{set_count} {RARITY[card["rarity"]]}\n{str(card["set"]).upper()} >{card["artist"]}',
+            f'{card["collector_number"].zfill(3)}/{set_count} {RARITY[card["rarity"]]}\n{str(card["set"]).upper()} >{card["artist"]}',
             font=font_small
         )
 
