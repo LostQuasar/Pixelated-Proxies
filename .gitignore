@@ -3,3 +3,5 @@ ascii/
 cards/
 enhanced/
 input.csv
+.vscode/launch.json
+__pycache__/
