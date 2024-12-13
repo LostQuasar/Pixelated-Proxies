@@ -101,7 +101,7 @@ with open('input.csv', 'r') as file:
 
                 if face.ORACLE_TEXT:
                     draw.text(
-                        (INCH / 4, INCH * 2.15), face.ORACLE_TEXT[0], font=font_medium
+                        (INCH / 4, INCH * 2.125), face.ORACLE_TEXT[0], font=font_medium
                     )
                 if face.FLAVOR_TEXT:
                     draw.text(
@@ -111,7 +111,7 @@ with open('input.csv', 'r') as file:
                             + (face.ORACLE_TEXT[0].count('\n') + 1.5)
                             * font_medium.size
                         ),
-                        face.FLAVOR_TEXT,
+                        face.FLAVOR_TEXT[0],
                         font=font_ital
                     )
             elif face.LAYOUT is Layout.SPLIT:
@@ -176,17 +176,23 @@ with open('input.csv', 'r') as file:
 
                 if face.ORACLE_TEXT:
                     draw.text(
-                        (WIDTH / 2 + INCH / 12, INCH * 2.15),
+                        (WIDTH / 2 + INCH / 12, INCH * 2.125),
                         face.ORACLE_TEXT[0],
                         font=font_medium
                     )
+                if face.FLAVOR_TEXT:
+                    draw.text(
+                        (WIDTH / 2 + INCH / 12, INCH * 2.125 + (face.ORACLE_TEXT[0].count('\n') + 1.5) * font_medium.size),
+                        face.FLAVOR_TEXT[0],
+                        font=font_ital
+                    )
 
                 draw.text(
-                    (INCH / 6, INCH * 2.15), f'{face.NAME[1]}', font=font_medium_bold
+                    (INCH / 6, INCH * 2.125), f'{face.NAME[1]}', font=font_medium_bold
                 )
                 text_len = draw.textlength(face.MANA_COST[1], font=font_medium_bold)
                 draw.text(
-                    (WIDTH / 2 - INCH / 12 - text_len, INCH * 2.15),
+                    (WIDTH / 2 - INCH / 12 - text_len, INCH * 2.125),
                     face.MANA_COST[1],
                     font=font_medium_bold
                 )

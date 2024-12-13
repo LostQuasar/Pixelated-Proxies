@@ -58,12 +58,22 @@ class CardFace:
             oracle_text = None
         self.ORACLE_TEXT = oracle_text
 
-        if 'flavor_text' in card_face:
+        if 'card_faces' in card_face:
+            flavor_text = []
+            for face in card_face['card_faces']:
+                face_text = []
+                if 'flavor_text' in face:
+                    for line in face['flavor_text'].split('\n'):
+                        width = 28 if layout is Layout.SPLIT else 22
+                        line = '\n'.join(wrap(line, width=width))
+                        face_text.append(line)
+                    flavor_text.append('\n'.join(face_text))
+        elif 'flavor_text' in card_face:
             flavor_text = []
             for line in card_face['flavor_text'].split('\n'):
                 line = '\n'.join(wrap(line, width=40))
                 flavor_text.append(line)
-            flavor_text = '\n'.join(flavor_text)
+            flavor_text = ['\n'.join(flavor_text)]
         else:
             flavor_text = None
         self.FLAVOR_TEXT = flavor_text
