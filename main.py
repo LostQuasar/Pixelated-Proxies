@@ -118,9 +118,7 @@ with open('input.csv', 'r') as file:
                 rot_image = Image.new('RGBA', (HEIGHT, WIDTH), (0, 0, 0, 0))
                 rot_draw = ImageDraw.Draw(rot_image)
                 rot_draw.text(
-                    (INCH / 6 + 150, INCH / 6), 
-                    f'> {face.NAME[0]}', 
-                    font=font_bold
+                    (INCH / 6 + 150, INCH / 6), f'> {face.NAME[0]}', font=font_bold
                 )
                 rot_draw.text(
                     (INCH / 12 + HEIGHT / 2, INCH / 6),
@@ -145,7 +143,7 @@ with open('input.csv', 'r') as file:
                     font=font_medium_bold
                 )
                 rot_draw.text(
-                    (INCH / 12 + HEIGHT/2, INCH * 1.625),
+                    (INCH / 12 + HEIGHT / 2, INCH * 1.625),
                     face.TYPE_LINE[1],
                     font=font_medium_bold
                 )
@@ -157,7 +155,7 @@ with open('input.csv', 'r') as file:
                         font=font_medium
                     )
                     rot_draw.text(
-                        (HEIGHT/2 + INCH/12, INCH * 1.75),
+                        (HEIGHT / 2 + INCH / 12, INCH * 1.75),
                         face.ORACLE_TEXT[1],
                         font=font_medium
                     )
@@ -178,26 +176,29 @@ with open('input.csv', 'r') as file:
 
                 if face.ORACLE_TEXT:
                     draw.text(
-                    (WIDTH / 2 + INCH / 12, INCH * 2.15), face.ORACLE_TEXT[0], font=font_medium
+                        (WIDTH / 2 + INCH / 12, INCH * 2.15),
+                        face.ORACLE_TEXT[0],
+                        font=font_medium
                     )
 
-                
-                draw.text((INCH / 6, INCH * 2.15), f'{face.NAME[1]}', font=font_medium_bold)
+                draw.text(
+                    (INCH / 6, INCH * 2.15), f'{face.NAME[1]}', font=font_medium_bold
+                )
                 text_len = draw.textlength(face.MANA_COST[1], font=font_medium_bold)
                 draw.text(
-                    (WIDTH/2 - INCH / 12 - text_len, INCH * 2.15),
+                    (WIDTH / 2 - INCH / 12 - text_len, INCH * 2.15),
                     face.MANA_COST[1],
                     font=font_medium_bold
                 )
 
                 draw.text(
-                    (INCH / 6, INCH * 2.25 ), face.TYPE_LINE[1], font=font_medium_bold
+                    (INCH / 6, INCH * 2.25), face.TYPE_LINE[1], font=font_medium_bold
                 )
 
                 if face.ORACLE_TEXT:
                     draw.text(
-                    (INCH / 6, INCH * 2.4), face.ORACLE_TEXT[1], font=font_medium
-                )
+                        (INCH / 6, INCH * 2.4), face.ORACLE_TEXT[1], font=font_medium
+                    )
 
             if face.PATH == f"{card.SET_CODE}-{card.CARD_NUMBER}-00":
                 draw.text(
