@@ -34,14 +34,14 @@ def generate_ascii_art(face: CardFace):
     width = 0
 
     if face.FULL_ART:
-        width = 190
+        width = 140
     elif face.LAYOUT is Layout.SPLIT:
-        width = 245
+        width = 194
     else:
-        width = 170
+        width = 130
 
     Popen(
-        f'image-to-ascii art_crops/{face.PATH}.jpg -w{width} -f t0-22b-uni.bdf -b0 -o ascii/{face.PATH}.png',
+        f'image-to-ascii art_crops/{face.PATH}.jpg -w{width} -f t0-13b-uni.bdf -b0 -o ascii/{face.PATH}.png',
         shell=True
     )
     ASCII_COUNT += 1
@@ -88,7 +88,10 @@ with open('input.csv', 'r') as file:
                     vert_offset = 500
                 if face.LAYOUT is Layout.FLIP:
                     vert_offset = 570 - BOTTOM_OFFSET
-
+                ascii_art = ascii_art.resize(
+                    (ascii_art.width * 2, ascii_art.height * 2),
+                    resample=Image.Resampling.NEAREST
+                )
                 card_img.paste(
                     ascii_art,
                     (
