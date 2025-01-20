@@ -17,6 +17,7 @@ class Layout(Enum):
     ADVENTURE = 'adventure'
     TRANSFORM = 'transform'
     SPLIT = 'split'
+    FLIP = 'flip'
 
 class CardFace:
     NAME: list[str]
@@ -24,11 +25,12 @@ class CardFace:
     ORACLE_TEXT: Optional[list[str]]
     FLAVOR_TEXT: Optional[list[str]]
     TYPE_LINE: list[str]
-    POWER: Optional[str]
-    TOUGHNESS: Optional[str]
+    POWER: list[str]
+    TOUGHNESS: list[str]
     ART: str
     PATH: str
     LAYOUT: Layout
+    FULL_ART: bool
 
     def __init__(self, card_face, path, layout):
         self.NAME = str(card_face['name']).split(" // ")
@@ -37,6 +39,10 @@ class CardFace:
         self.ART = card_face['image_uris']['art_crop']
         self.PATH = path
         self.TYPE_LINE = str(card_face['type_line']).split(" // ")
+        DEFAULT_WIDTH = 42
+        HOR_SPLIT_WIDTH = 28
+        VER_SPLIT_WIDTH = 22
+
         if 'card_faces' in card_face:
             oracle_text = []
             for face in card_face['card_faces']:
@@ -44,14 +50,18 @@ class CardFace:
                 for line in face['oracle_text'].split('\n'):
                     if line in REMOVAL_LINES:
                         continue
-                    width = 28 if layout is Layout.SPLIT else 22
+                    width = DEFAULT_WIDTH
+                    if layout is Layout.SPLIT:
+                        width = HOR_SPLIT_WIDTH
+                    if layout is Layout.ADVENTURE:
+                        width = VER_SPLIT_WIDTH
                     line = '\n'.join(wrap(line, width=width))
                     face_text.append(line)
                 oracle_text.append('\n'.join(face_text))
         elif 'oracle_text' in card_face:
             oracle_text = []
             for line in card_face['oracle_text'].split('\n'):
-                line = '\n'.join(wrap(line, width=40))
+                line = '\n'.join(wrap(line, width=DEFAULT_WIDTH))
                 oracle_text.append(line)
             oracle_text = ['\n'.join(oracle_text)]
         else:
@@ -64,23 +74,35 @@ class CardFace:
                 face_text = []
                 if 'flavor_text' in face:
                     for line in face['flavor_text'].split('\n'):
-                        width = 28 if layout is Layout.SPLIT else 22
+                        width = HOR_SPLIT_WIDTH if layout is Layout.SPLIT else VER_SPLIT_WIDTH
                         line = '\n'.join(wrap(line, width=width))
                         face_text.append(line)
                     flavor_text.append('\n'.join(face_text))
         elif 'flavor_text' in card_face:
             flavor_text = []
             for line in card_face['flavor_text'].split('\n'):
-                line = '\n'.join(wrap(line, width=40))
+                line = '\n'.join(wrap(line, width=DEFAULT_WIDTH))
                 flavor_text.append(line)
             flavor_text = ['\n'.join(flavor_text)]
         else:
             flavor_text = None
         self.FLAVOR_TEXT = flavor_text
-        
-        self.POWER = card_face['power'] if 'power' in card_face else None
-        self.TOUGHNESS = card_face['toughness'] if 'toughness' in card_face else None
 
+        if "full_art" in card_face:
+            self.FULL_ART = bool(card_face["full_art"])
+        else:
+            self.FULL_ART = False
+
+        self.POWER = []
+        self.TOUGHNESS = []
+        if 'card_faces' in card_face:
+            for face in card_face['card_faces']:
+                if 'power' in face and 'toughness' in face:
+                    self.POWER.append(face['power'])
+                    self.TOUGHNESS.append(face['toughness'])
+        elif 'power' in card_face and 'toughness' in card_face:
+            self.POWER.append(card_face['power'])
+            self.TOUGHNESS.append(card_face['toughness'])
 class CardInfo:
     LAYOUT: Layout
     SET_CODE: str
@@ -113,7 +135,8 @@ class CardInfo:
                 self.FACES.append(CardFace(card_info, f"{self.SET_CODE}-{self.CARD_NUMBER}-00", self.LAYOUT))
             case Layout.ADVENTURE:
                 self.FACES.append(CardFace(card_info, f"{self.SET_CODE}-{self.CARD_NUMBER}-00", self.LAYOUT))
-
+            case Layout.FLIP:
+                self.FACES.append(CardFace(card_info, f"{self.SET_CODE}-{self.CARD_NUMBER}-00", self.LAYOUT))
     def get_set_count(self, code):
         SET_URL = f"https://api.scryfall.com/sets/{code}"
         set_count = requests.get(SET_URL).json()['card_count']
