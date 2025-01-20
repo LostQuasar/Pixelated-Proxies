@@ -3,11 +3,10 @@ import random
 from subprocess import Popen
 from textwrap import wrap
 import time
-from typing import Optional
 import requests
-from enum import Enum
 from PIL import Image, ImageEnhance, ImageDraw, ImageFont
 from card_info import *
+import toml
 
 INCH = 900
 WIDTH, HEIGHT = int(2.5 * INCH), int(3.5 * INCH)
@@ -33,20 +32,30 @@ def generate_ascii_art(face: CardFace):
     global ASCII_COUNT
     width = 0
 
-    if face.FULL_ART:
-        width = 140
-    elif face.LAYOUT is Layout.SPLIT:
-        width = 194
+    if face.LAYOUT is Layout.SPLIT:
+        width = int((INCH * 3.125) / (font_size + 2))
     else:
-        width = 130
-
+        width = int((INCH * 2.25) / (font_size + 2))
+    
     Popen(
-        f'image-to-ascii art_crops/{face.PATH}.jpg -w{width} -f t0-13b-uni.bdf -b0 -o ascii/{face.PATH}.png',
+        f'image-to-ascii art_crops/{face.PATH}.jpg -w{width} -f {font_path} -b0 -o ascii/{face.PATH}.png',
         shell=True
     )
     ASCII_COUNT += 1
-    time.sleep(0.2)
+    time.sleep(0.4)
 
+
+font_size = 0
+font_path = ''
+with open('config.toml', 'r') as conf:
+    config = toml.loads(conf.read())
+    font_path = config['font']
+    with open(font_path, 'r') as font:
+        for line in font:
+            if line.startswith('SIZE'):
+                font_size = int(line.split(' ')[1])
+
+print(font_path, font_size)
 
 with open('input.csv', 'r') as file:
     font_bold = ImageFont.truetype('Hack-Bold.ttf', 80)
@@ -70,7 +79,7 @@ with open('input.csv', 'r') as file:
                 download_art_crop(face)
                 generate_ascii_art(face)
 
-            #elif not os.path.exists(f"ascii/{face.PATH}.png"):
+            # elif not os.path.exists(f"ascii/{face.PATH}.png"):
             generate_ascii_art(face)
 
             card_img = Image.new('RGB', (WIDTH, HEIGHT), (0, 0, 0))
@@ -110,7 +119,9 @@ with open('input.csv', 'r') as file:
                     font=font_bold
                 )
                 if not face.FULL_ART:
-                    draw.text((MARGIN, INCH * 1.95), face.TYPE_LINE[0], font=font_medium_bold)
+                    draw.text(
+                        (MARGIN, INCH * 1.95), face.TYPE_LINE[0], font=font_medium_bold
+                    )
                     if face.ORACLE_TEXT:
                         draw.text(
                             (MARGIN + 80, INCH * 2.1),
@@ -185,7 +196,9 @@ with open('input.csv', 'r') as file:
                     font=font_bold
                 )
 
-                draw.text((MARGIN, INCH * 1.95), face.TYPE_LINE[0], font=font_medium_bold)
+                draw.text(
+                    (MARGIN, INCH * 1.95), face.TYPE_LINE[0], font=font_medium_bold
+                )
 
                 if face.ORACLE_TEXT:
                     draw.text(
@@ -233,19 +246,17 @@ with open('input.csv', 'r') as file:
                     font=font_bold
                 )
                 draw.text(
-                    (MARGIN, INCH * .875),
-                    face.TYPE_LINE[0],
-                    font=font_medium_bold
+                    (MARGIN, INCH * 0.875), face.TYPE_LINE[0], font=font_medium_bold
                 )
-                
+
                 if face.ORACLE_TEXT:
                     draw.text(
-                        (MARGIN + 80, INCH * .33),
+                        (MARGIN + 80, INCH * 0.33),
                         face.ORACLE_TEXT[0],
                         font=font_medium
                     )
                     flip_draw.text(
-                        (MARGIN + 80, INCH * .33 + CENTER_GAP + BOTTOM_OFFSET),
+                        (MARGIN + 80, INCH * 0.33 + CENTER_GAP + BOTTOM_OFFSET),
                         face.ORACLE_TEXT[1],
                         font=font_medium
                     )
@@ -254,27 +265,33 @@ with open('input.csv', 'r') as file:
                     creature_text = f'({face.POWER[0]}/{face.TOUGHNESS[0]})'
                     text_len = draw.textlength(creature_text, font=font_bold)
                     draw.text(
-                        (WIDTH - MARGIN - text_len, INCH * .875),
+                        (WIDTH - MARGIN - text_len, INCH * 0.875),
                         creature_text,
                         font=font_bold
                     )
                     creature_text = f'({face.POWER[1]}/{face.TOUGHNESS[1]})'
                     text_len = draw.textlength(creature_text, font=font_bold)
                     flip_draw.text(
-                        (WIDTH - MARGIN - text_len, INCH * .875 + CENTER_GAP + BOTTOM_OFFSET * 1.5),
+                        (
+                            WIDTH - MARGIN - text_len,
+                            INCH * 0.875 + CENTER_GAP + BOTTOM_OFFSET * 1.5
+                        ),
                         creature_text,
                         font=font_bold
                     )
 
-                flip_draw.text((MARGIN, MARGIN + CENTER_GAP + BOTTOM_OFFSET), f'> {face.NAME[1]}', font=font_bold)
                 flip_draw.text(
-                    (MARGIN, INCH * .875 + CENTER_GAP + BOTTOM_OFFSET * 1.5),
+                    (MARGIN, MARGIN + CENTER_GAP + BOTTOM_OFFSET),
+                    f'> {face.NAME[1]}',
+                    font=font_bold
+                )
+                flip_draw.text(
+                    (MARGIN, INCH * 0.875 + CENTER_GAP + BOTTOM_OFFSET * 1.5),
                     face.TYPE_LINE[1],
                     font=font_medium_bold
                 )
                 flip_image = flip_image.rotate(180)
                 card_img.paste(flip_image, mask=flip_image)
-
 
             if face.PATH == f"{card.SET_CODE}-{card.CARD_NUMBER}-00":
                 draw.text(
