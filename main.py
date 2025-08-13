@@ -22,6 +22,19 @@ CUSTOM_COUNT = 0
 GEN_COUNT = 0
 BACKGROUND_COLOR = (0, 0, 0)
 TEXT_COLOR = (255, 255, 255)
+MANA_W_COLOR = (211, 211, 151)
+MANA_U_COLOR = (63, 157, 207)
+MANA_B_COLOR = (127, 72, 127)
+MANA_R_COLOR = (205, 82, 71)
+MANA_G_COLOR = (80, 177, 111)
+MANA_COLOR = {
+    'W': MANA_W_COLOR,
+    'U': MANA_U_COLOR,
+    'B': MANA_B_COLOR,
+    'R': MANA_R_COLOR,
+    'G': MANA_G_COLOR
+}
+
 MODE = 'pixel'
 
 
@@ -72,8 +85,8 @@ def generate_custom_art(face: CardFace, mode):
 
 
 with open('input.csv', 'r') as file:
-    size_large = 90
-    size_medium = 70
+    size_large = 85
+    size_medium = 65
     size_small = 60
     font_large = ImageFont.truetype('Hack-Bold.ttf', size_large)
     font_medium_bold = ImageFont.truetype('Hack-Bold.ttf', size_medium)
@@ -132,16 +145,19 @@ with open('input.csv', 'r') as file:
                     font=font_large,
                     fill=TEXT_COLOR
                 )
-                mana_cost = face.MANA_COST[
-                    0
-                ]  # .lower().replace("{","").replace("}","")
-                text_len = draw.textlength(mana_cost, font=font_large)
-                draw.text(
-                    (WIDTH - MARGIN - text_len, MARGIN - 4),
-                    mana_cost,
-                    font=font_large,
-                    fill=TEXT_COLOR
-                )
+                text_len = draw.textlength(face.MANA_COST[0], font=font_large)
+                mana_cost = face.MANA_COST[0].strip('{}').split('}{')
+                offset = 0
+                mana_cost.reverse()
+                for cost in mana_cost:
+                    if cost in MANA_COLOR.keys():
+                        color = MANA_COLOR[cost]
+                    else:
+                        color = TEXT_COLOR
+                    cost = "{"+cost+"}"
+                    offset += draw.textlength(cost, font=font_large) + 4 
+                    draw.text((WIDTH - MARGIN - offset, MARGIN),cost, font=font_large, fill=color)
+
                 if not face.FULL_ART:
                     draw.text(
                         (MARGIN, DPI * 1.95),
@@ -155,7 +171,7 @@ with open('input.csv', 'r') as file:
                             face.ORACLE_TEXT[0],
                             font=font_medium,
                             fill=TEXT_COLOR,
-                            spacing=8
+                            spacing=10
                         )
 
                 if face.FLAVOR_TEXT:
@@ -168,7 +184,7 @@ with open('input.csv', 'r') as file:
                         face.FLAVOR_TEXT[0],
                         font=font_medium_italic,
                         fill=TEXT_COLOR,
-                        spacing=8
+                        spacing=10
                     )
             elif face.LAYOUT is Layout.SPLIT:
                 rot_image = Image.new('RGBA', (HEIGHT, WIDTH), (0, 0, 0, 0))

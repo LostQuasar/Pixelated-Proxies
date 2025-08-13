@@ -40,7 +40,7 @@ class CardFace:
         self.ART = card_face['image_uris']['art_crop']
         self.PATH = path
         self.TYPE_LINE = str(card_face['type_line']).split(" // ")
-        DEFAULT_WIDTH = 42
+        DEFAULT_WIDTH = 44
         HOR_SPLIT_WIDTH = 28
         VER_SPLIT_WIDTH = 22
 
@@ -64,7 +64,7 @@ class CardFace:
             oracle_text = []
             for line in pre_oracle_text.split('\n'):
                 line = '\n'.join(wrap(line, width=DEFAULT_WIDTH))
-                oracle_text.append(line)
+                oracle_text.append(line+"\n")
             oracle_text = ['\n'.join(oracle_text)]
         else:
             oracle_text = None
