@@ -1,7 +1,7 @@
 from enum import Enum
 from textwrap import wrap
 from typing import List, Optional
-import requests
+import requests, re
 
 REMOVAL_LINES = ["(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)"]
 
@@ -18,6 +18,7 @@ class Layout(Enum):
     TRANSFORM = 'transform'
     SPLIT = 'split'
     FLIP = 'flip'
+    DUAL_FACE = 'modal_dfc'
 
 class CardFace:
     NAME: list[str]
@@ -59,8 +60,9 @@ class CardFace:
                     face_text.append(line)
                 oracle_text.append('\n'.join(face_text))
         elif 'oracle_text' in card_face:
+            pre_oracle_text = re.sub('\\(.+?\\)','',card_face['oracle_text'])
             oracle_text = []
-            for line in card_face['oracle_text'].split('\n'):
+            for line in pre_oracle_text.split('\n'):
                 line = '\n'.join(wrap(line, width=DEFAULT_WIDTH))
                 oracle_text.append(line)
             oracle_text = ['\n'.join(oracle_text)]
@@ -88,8 +90,8 @@ class CardFace:
             flavor_text = None
         self.FLAVOR_TEXT = flavor_text
 
-        if "full_art" in card_face:
-            self.FULL_ART = bool(card_face["full_art"])
+        if "full_art" in card_face and "land" in self.TYPE_LINE:
+                self.FULL_ART = bool(card_face["full_art"])
         else:
             self.FULL_ART = False
 

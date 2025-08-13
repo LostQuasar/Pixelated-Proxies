@@ -1,7 +1,9 @@
 art_crops/ 
 ascii/
+pixel/
 cards/
 enhanced/
 input.csv
 .vscode/launch.json
 __pycache__/
+*.ttf
