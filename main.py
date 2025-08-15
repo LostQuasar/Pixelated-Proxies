@@ -1,13 +1,10 @@
 import codecs
 import os
-import random
 from subprocess import Popen
-from textwrap import wrap
 import time
 import requests
-from PIL import Image, ImageEnhance, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageEnhance, ImageDraw, ImageFont
 from card_info import *
-import toml
 
 DPI = 900
 MODE_TYPE = {'pixel': 0, 'ascii': 1}
