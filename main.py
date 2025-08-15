@@ -145,7 +145,6 @@ with open('input.csv', 'r') as file:
                     font=font_large,
                     fill=TEXT_COLOR
                 )
-                text_len = draw.textlength(face.MANA_COST[0], font=font_large)
                 mana_cost = face.MANA_COST[0].strip('{}').split('}{')
                 offset = 0
                 mana_cost.reverse()
@@ -154,10 +153,15 @@ with open('input.csv', 'r') as file:
                         color = MANA_COLOR[cost]
                     else:
                         color = TEXT_COLOR
-                    cost = "{"+cost+"}"
-                    offset += draw.textlength(cost, font=font_large) + 4 
-                    draw.text((WIDTH - MARGIN - offset, MARGIN),cost, font=font_large, fill=color)
-
+                    cost = '{' + cost + '}'
+                    offset += draw.textlength(cost, font=font_large)
+                    draw.text(
+                        (WIDTH - MARGIN - offset, MARGIN),
+                        cost,
+                        font=font_large,
+                        fill=color
+                    )
+                    offset += 4
                 if not face.FULL_ART:
                     draw.text(
                         (MARGIN, DPI * 1.95),
@@ -166,13 +170,37 @@ with open('input.csv', 'r') as file:
                         fill=TEXT_COLOR
                     )
                     if face.ORACLE_TEXT:
-                        draw.text(
-                            (MARGIN + 80, DPI * 2.1),
-                            face.ORACLE_TEXT[0],
-                            font=font_medium,
-                            fill=TEXT_COLOR,
-                            spacing=10
-                        )
+                        oracle_text = face.ORACLE_TEXT[0].split('\n')
+                        oracle_vert_offset = 0
+                        for line in oracle_text:
+                            offset = 0
+                            broken_line = re.split(r'{|}', line)
+                            if len(broken_line) > 1:
+                                for part in broken_line:
+                                    color = TEXT_COLOR
+                                    if len(part) == 1:
+                                        if part in MANA_COLOR.keys():
+                                            color = MANA_COLOR[part]
+                                        part = '{' + part + '}'
+                                    draw.text(
+                                        (
+                                            MARGIN + 80 + offset,
+                                            DPI * 2.1 + oracle_vert_offset
+                                        ),
+                                        part,
+                                        font=font_medium,
+                                        fill=color
+                                    )
+                                    offset += draw.textlength(part, font=font_medium)
+                                oracle_vert_offset += size_medium + 4
+                            else:
+                                draw.text(
+                                    (MARGIN + 80, DPI * 2.1 + oracle_vert_offset),
+                                    line,
+                                    font=font_medium,
+                                    fill=TEXT_COLOR
+                                )
+                                oracle_vert_offset += size_medium + 4
 
                 if face.FLAVOR_TEXT:
                     draw.text(
