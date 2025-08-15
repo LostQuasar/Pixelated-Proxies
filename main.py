@@ -367,7 +367,7 @@ with open('input.csv', 'r') as file:
                 draw.text(
                     (MARGIN, DPI * 0.875),
                     face.TYPE_LINE[0],
-                    font=font_medium,
+                    font=font_medium_bold,
                     fill=TEXT_COLOR
                 )
 
@@ -389,7 +389,7 @@ with open('input.csv', 'r') as file:
                     creature_text = f'({face.POWER[0]}/{face.TOUGHNESS[0]})'
                     text_len = draw.textlength(creature_text, font=font_large)
                     draw.text(
-                        (WIDTH - MARGIN - text_len, DPI * 0.875),
+                        (WIDTH - MARGIN - text_len, DPI * 0.875 - 20),
                         creature_text,
                         font=font_large,
                         fill=TEXT_COLOR
@@ -399,7 +399,7 @@ with open('input.csv', 'r') as file:
                     flip_draw.text(
                         (
                             WIDTH - MARGIN - text_len,
-                            DPI * 0.875 + CENTER_GAP + BOTTOM_OFFSET * 1.5
+                            DPI * 0.875 + CENTER_GAP + BOTTOM_OFFSET * 1.5 - 20
                         ),
                         creature_text,
                         font=font_large,
@@ -415,7 +415,7 @@ with open('input.csv', 'r') as file:
                 flip_draw.text(
                     (MARGIN, DPI * 0.875 + CENTER_GAP + BOTTOM_OFFSET * 1.5),
                     face.TYPE_LINE[1],
-                    font=font_medium,
+                    font=font_medium_bold,
                     fill=TEXT_COLOR
                 )
                 flip_image = flip_image.rotate(180)
