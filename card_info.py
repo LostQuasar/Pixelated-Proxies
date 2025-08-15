@@ -60,9 +60,8 @@ class CardFace:
                     face_text.append(line)
                 oracle_text.append('\n'.join(face_text))
         elif 'oracle_text' in card_face:
-            pre_oracle_text = re.sub('\\(.+?\\)','',card_face['oracle_text'])
             oracle_text = []
-            for line in pre_oracle_text.split('\n'):
+            for line in card_face['oracle_text'].split('\n'):
                 line = '\n'.join(wrap(line, width=DEFAULT_WIDTH))
                 oracle_text.append(line+"\n")
             oracle_text = ['\n'.join(oracle_text)]
