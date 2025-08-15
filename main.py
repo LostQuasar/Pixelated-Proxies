@@ -108,30 +108,20 @@ def draw_oracle_text(left_bound, top_bound, font_size, font, oracle_text, draw):
     for line in oracle_text:
         offset = 0
         broken_line = re.split(r'{|}', line)
-        if len(broken_line) > 1:
-            for part in broken_line:
-                color = TEXT_COLOR
-                if len(part) == 1:
-                    if part in MANA_COLOR.keys():
-                        color = MANA_COLOR[part]
-                    part = '{' + part + '}'
-                draw.text(
-                    (left_bound + offset, top_bound + oracle_vert_offset),
-                    part,
-                    font=font_medium,
-                    fill=color
-                )
-                offset += draw.textlength(part, font=font_medium)
-            oracle_vert_offset += size_medium + 4
-        else:
+        for part in broken_line:
+            color = TEXT_COLOR
+            if len(part) == 1:
+                if part in MANA_COLOR.keys():
+                    color = MANA_COLOR[part]
+                part = '{' + part + '}'
             draw.text(
-                (left_bound, top_bound + oracle_vert_offset),
-                line,
-                font=font_medium,
-                fill=TEXT_COLOR
+                (left_bound + offset, top_bound + oracle_vert_offset),
+                part,
+                font=font,
+                fill=color
             )
-            oracle_vert_offset += size_medium + 4
-
+            offset += draw.textlength(part, font=font)
+        oracle_vert_offset += font_size + 4
 
 with open('input.csv', 'r') as file:
     size_large = 85
