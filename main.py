@@ -5,9 +5,9 @@ import time
 import requests
 from PIL import Image, ImageEnhance, ImageDraw, ImageFont
 from card_info import *
+from tqdm import tqdm
 
 DPI = 900
-MODE_TYPE = {'pixel': 0, 'ascii': 1}
 
 BLEED_EDGE = 0
 WIDTH, HEIGHT = int(2.5 * DPI) + BLEED_EDGE, int(3.5 * DPI) + BLEED_EDGE
@@ -33,8 +33,6 @@ MANA_COLOR = {
     'G': MANA_G_COLOR
 }
 
-MODE = 'pixel'
-
 
 def download_art_crop(face: CardFace):
     global DOWN_COUNT
@@ -46,38 +44,20 @@ def download_art_crop(face: CardFace):
 
 def generate_custom_art(face: CardFace, mode):
     global CUSTOM_COUNT
-    # width = 0
-    if mode == MODE_TYPE['ascii']:
-        if face.LAYOUT is Layout.SPLIT:
-            width = int((DPI * 3.125) / (13 * 2 + 2))
-        else:
-            width = int((DPI * 2.25) / (13 * 2 + 2))
-
-        Popen(
-            f'image-to-ascii art_crops/{face.PATH}.jpg -w{width} -b-4 -o ascii/{face.PATH}.png',
-            shell=True
+    with Image.open(f'art_crops/{face.PATH}.jpg') as art_crop:
+        pixel = art_crop.resize(
+            (int(art_crop.width / 8), int(art_crop.height / 8)),
+            resample=Image.Resampling.HAMMING
         )
-        time.sleep(0.4)
-        with Image.open(f'ascii/{face.PATH}.png') as ascii_image:
-            ascii_image = ImageEnhance.Contrast(ascii_image).enhance(1.2)
-            ascii_image = ImageEnhance.Color(ascii_image).enhance(1.2)
-        ascii_image.save(f'ascii/{face.PATH}.png')
 
-    elif mode == MODE_TYPE['pixel']:
-        with Image.open(f'art_crops/{face.PATH}.jpg') as art_crop:
-            pixel = art_crop.resize(
-                (int(art_crop.width / 8), int(art_crop.height / 8)),
-                resample=Image.Resampling.HAMMING
-            )
+        pixel = ImageEnhance.Contrast(pixel).enhance(1.2)
+        pixel = ImageEnhance.Color(pixel).enhance(1.2)
 
-            pixel = ImageEnhance.Contrast(pixel).enhance(1.2)
-            pixel = ImageEnhance.Color(pixel).enhance(1.2)
-
-            pixel = pixel.resize(
-                (int(pixel.width * 6), int(pixel.height * 6)),
-                resample=Image.Resampling.NEAREST
-            )
-        pixel.save(f'pixel/{face.PATH}.png')
+        pixel = pixel.resize(
+            (int(pixel.width * 6), int(pixel.height * 6)),
+            resample=Image.Resampling.NEAREST
+        )
+    pixel.save(f'pixel/{face.PATH}.png')
 
     CUSTOM_COUNT += 1
 
@@ -107,7 +87,7 @@ def draw_oracle_text(left_bound, top_bound, font_size, font, oracle_text, draw):
         broken_line = re.split(r'{|}', line)
         for part in broken_line:
             color = TEXT_COLOR
-            if len(part) == 1:
+            if len(part) == 1 and part not in [".", "(", ")"]:
                 if part in MANA_COLOR.keys():
                     color = MANA_COLOR[part]
                 part = '{' + part + '}'
@@ -131,7 +111,7 @@ with open('input.csv', 'r') as file:
     font_small = ImageFont.truetype('Hack-Regular.ttf', size_small)
     font_small_italic = ImageFont.truetype('Hack-Italic.ttf', size_small)
     title_prefix = '> '
-    for line in file.readlines():
+    for line in tqdm(file.readlines()):
         line = line.strip().split(',')
         if line[0].startswith('plst'):
             code, num = line[1].split('-')
@@ -143,10 +123,10 @@ with open('input.csv', 'r') as file:
         for face in card.FACES:
             if not os.path.exists(f"art_crops/{face.PATH}.jpg"):
                 download_art_crop(face)
-                generate_custom_art(face, MODE_TYPE[MODE])
+                generate_custom_art(face)
 
-            elif not os.path.exists(f"{MODE}/{face.PATH}.png"):
-                generate_custom_art(face, MODE_TYPE[MODE])
+            elif not os.path.exists(f"pixel/{face.PATH}.png"):
+                generate_custom_art(face)
 
             card_img = Image.new('RGB', (WIDTH, HEIGHT), BACKGROUND_COLOR)
 
@@ -187,10 +167,15 @@ with open('input.csv', 'r') as file:
                     WIDTH - MARGIN, MARGIN, font_large, face.MANA_COST[0], draw
                 )
                 if not face.FULL_ART:
+                    type_len = draw.textlength(face.TYPE_LINE[0], font=font_large)
+                    if type_len > (WIDTH - (MARGIN*2)):
+                        size = font_medium_bold
+                    else:
+                        size = font_large
                     draw.text(
                         (MARGIN, DPI * 1.95),
                         face.TYPE_LINE[0],
-                        font=font_large,
+                        font=size,
                         fill=TEXT_COLOR
                     )
                     if face.ORACLE_TEXT:

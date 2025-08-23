@@ -27,6 +27,7 @@ class Layout(Enum):
     SPLIT = 'split'
     FLIP = 'flip'
     DUAL_FACE = 'modal_dfc'
+    CLASS = 'class'
 
 
 class CardFace:
@@ -102,7 +103,7 @@ class CardFace:
             flavor_text = None
         self.FLAVOR_TEXT = flavor_text
 
-        if 'full_art' in card_face and 'land' in self.TYPE_LINE:
+        if 'full_art' in card_face and 'land' in str(self.TYPE_LINE).lower():
             self.FULL_ART = bool(card_face['full_art'])
         else:
             self.FULL_ART = False
@@ -157,6 +158,17 @@ class CardInfo:
                         )
                     )
                     i += 1
+            case Layout.DUAL_FACE:
+                i = 0
+                for face in card_info['card_faces']:
+                    self.FACES.append(
+                        CardFace(
+                            face,
+                            f"{self.SET_CODE}-{self.CARD_NUMBER}-{str(i).zfill(2)}",
+                            self.LAYOUT
+                        )
+                    )
+                    i += 1
             case Layout.SPLIT:
                 self.FACES.append(
                     CardFace(
@@ -175,6 +187,11 @@ class CardInfo:
                         card_info, f"{self.SET_CODE}-{self.CARD_NUMBER}-00", self.LAYOUT
                     )
                 )
+            case _:
+                print(f"Format {self.LAYOUT.name} from card {card_info['name']} not supported")
+                exit()
+
+                
 
     def get_set_count(self, code):
         SET_URL = f"https://api.scryfall.com/sets/{code}"
