@@ -1,6 +1,5 @@
 import codecs
 import os
-from subprocess import Popen
 import time
 import requests
 from PIL import Image, ImageEnhance, ImageDraw, ImageFont
@@ -32,19 +31,19 @@ MANA_COLOR = {
     'R': MANA_R_COLOR,
     'G': MANA_G_COLOR
 }
-
+PHYREXIAN = "P"
 
 def download_art_crop(face: CardFace):
     global DOWN_COUNT
     img = Image.open(requests.get(face.ART, stream=True).raw)
-    img.save(f'art_crops/{face.PATH}.jpg')
+    img.save(f'../art_crops/{face.PATH}.jpg')
     DOWN_COUNT += 1
     time.sleep(1)
 
 
 def generate_custom_art(face: CardFace):
     global CUSTOM_COUNT
-    with Image.open(f'art_crops/{face.PATH}.jpg') as art_crop:
+    with Image.open(f'../art_crops/{face.PATH}.jpg') as art_crop:
         pixel = art_crop.resize(
             (int(art_crop.width / 8), int(art_crop.height / 8)),
             resample=Image.Resampling.HAMMING
@@ -57,26 +56,32 @@ def generate_custom_art(face: CardFace):
             (int(pixel.width * 6), int(pixel.height * 6)),
             resample=Image.Resampling.NEAREST
         )
-    pixel.save(f'pixel/{face.PATH}.png')
+    pixel.save(f'../pixel/{face.PATH}.png')
 
     CUSTOM_COUNT += 1
 
 
 def draw_mana_cost(right_bound, top_bound, font, cost, draw):
-    mana_cost = cost.strip('{}').split('}{')
     offset = 0
-    mana_cost.reverse()
-    for cost in mana_cost:
-        if cost in MANA_COLOR.keys():
-            color = MANA_COLOR[cost]
+    color_list = []
+    for i in range(len(cost)):
+        char = cost[::-1][i]
+        if char in MANA_COLOR.keys():
+            color = MANA_COLOR[char]
+            if  cost[::-1][i-1] != "/":
+                color_list[-1] = color
+            if cost[::-1][i-2] == PHYREXIAN:
+                color_list[-1] = color
+                color_list[-2] = color
+                color_list[-3] = color
+        elif char == "{":
+            color = color_list[-1]
         else:
             color = TEXT_COLOR
-        if cost == '':
-            continue
-        cost = '{' + cost + '}'
-        offset += draw.textlength(cost, font=font)
-        draw.text((right_bound - offset, top_bound), cost, font=font, fill=color)
-        offset += 4
+        color_list.append(color)
+    for i in range(len(color_list)):    
+        offset += draw.textlength(cost[::-1][i], font=font)
+        draw.text((right_bound - offset, top_bound), cost[::-1][i], font=font, fill=color_list[i])
 
 
 def draw_oracle_text(left_bound, top_bound, font_size, font, oracle_text, draw):
@@ -100,25 +105,24 @@ def draw_oracle_text(left_bound, top_bound, font_size, font, oracle_text, draw):
             offset += draw.textlength(part, font=font)
         oracle_vert_offset += font_size + 4
 
-
-with open('input.csv', 'r') as file:
+with open('../input.csv', 'r') as file:
     size_large = 85
     size_medium = 65
     size_small = 60
-    font_large = ImageFont.truetype('Hack-Bold.ttf', size_large)
-    font_medium_bold = ImageFont.truetype('Hack-Bold.ttf', size_medium)
-    font_medium = ImageFont.truetype('Hack-Regular.ttf', size_medium)
-    font_medium_italic = ImageFont.truetype('Hack-Italic.ttf', size_medium)
-    font_small = ImageFont.truetype('Hack-Regular.ttf', size_small)
-    font_small_italic = ImageFont.truetype('Hack-Italic.ttf', size_small)
+    font_large = ImageFont.truetype('../resources/Hack-Bold.ttf', size_large)
+    font_medium_bold = ImageFont.truetype('../resources/Hack-Bold.ttf', size_medium)
+    font_medium = ImageFont.truetype('../resources/Hack-Regular.ttf', size_medium)
+    font_medium_italic = ImageFont.truetype('../resources/Hack-Italic.ttf', size_medium)
+    font_small = ImageFont.truetype('../resources/Hack-Regular.ttf', size_small)
+    font_small_italic = ImageFont.truetype('../resources/Hack-Italic.ttf', size_small)
     title_prefix = '> '
 
-    if not os.path.exists('pixel'):
-        os.makedirs('pixel')
-    if not os.path.exists('art_crops'):
-        os.makedirs('art_crops')
-    if not os.path.exists('cards'):
-        os.makedirs('cards')
+    if not os.path.exists('../pixel'):
+        os.makedirs('../pixel')
+    if not os.path.exists('../art_crops'):
+        os.makedirs('../art_crops')
+    if not os.path.exists('../cards'):
+        os.makedirs('../cards')
 
     for line in tqdm(file.readlines()):
         line = line.strip().split(',')
@@ -130,16 +134,18 @@ with open('input.csv', 'r') as file:
         card: CardInfo = CardInfo(code, num)
 
         for face in card.FACES:
-            if not os.path.exists(f"art_crops/{face.PATH}.jpg"):
+            if not os.path.exists(f"../art_crops/{face.PATH}.jpg"):
                 download_art_crop(face)
                 generate_custom_art(face)
 
-            elif not os.path.exists(f"pixel/{face.PATH}.png"):
+            elif not os.path.exists(f"../pixel/{face.PATH}.png"):
                 generate_custom_art(face)
 
             card_img = Image.new('RGB', (WIDTH, HEIGHT), BACKGROUND_COLOR)
 
-            with Image.open(f'pixel/{face.PATH}.png') as custom_art:
+
+            #PASTE IMAGE
+            with Image.open(f'../pixel/{face.PATH}.png') as custom_art:
                 vert_offset = 0
                 hor_offset = 0
 
@@ -457,7 +463,6 @@ with open('input.csv', 'r') as file:
                     fill=TEXT_COLOR
                 )
 
-
             # DRAW BOTTOM INFO
             if True:
                 draw.text(
@@ -492,7 +497,7 @@ with open('input.csv', 'r') as file:
                         fill=TEXT_COLOR
                     )
                 
-            card_img.save(f'cards/{face.PATH}.png')
+            card_img.save(f'../cards/{face.PATH}.png')
             GEN_COUNT += 1
 
 print(f"Downloaded: {DOWN_COUNT} art crops")

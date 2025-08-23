@@ -1,6 +1,6 @@
 from enum import Enum
 from textwrap import wrap
-from typing import List, Optional
+from typing import Optional
 import requests, re
 
 # COMMENT OUT TO SHOW REMINDER TEXT
