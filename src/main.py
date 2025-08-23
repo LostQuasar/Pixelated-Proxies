@@ -124,7 +124,6 @@ with open('../input.csv', 'r') as file:
     font_medium_italic = ImageFont.truetype('../resources/Hack-Italic.ttf', size_medium)
     font_small = ImageFont.truetype('../resources/Hack-Regular.ttf', size_small)
     font_small_italic = ImageFont.truetype('../resources/Hack-Italic.ttf', size_small)
-    title_prefix = '> '
 
     if not os.path.exists('../pixel'):
         os.makedirs('../pixel')
@@ -152,6 +151,10 @@ with open('../input.csv', 'r') as file:
 
             card_img = Image.new('RGB', (WIDTH, HEIGHT), BACKGROUND_COLOR)
 
+            title_prefix = '> '
+            if 'Legendary' in face.TYPE_LINE[0]:
+                title_prefix = '# '
+
             # PASTE IMAGE
             with Image.open(f'../pixel/{face.PATH}.png') as custom_art:
                 vert_offset = 0
@@ -176,14 +179,13 @@ with open('../input.csv', 'r') as file:
                     vert_offset = 570 - BOTTOM_OFFSET + 70
                     hor_offset = custom_art.width * 2
 
-
                 custom_art = custom_art.resize(
                     (int(custom_art.width * 3.8), int(custom_art.height * 3.8)),
                     resample=Image.Resampling.NEAREST
                 )
 
                 if 'Planeswalker' in face.TYPE_LINE[0]:
-                    vert_offset = custom_art.height/2  - (DPI * 3/4)
+                    vert_offset = custom_art.height / 2 - (DPI * 3 / 4)
 
                 card_img.paste(
                     custom_art,
@@ -217,7 +219,7 @@ with open('../input.csv', 'r') as file:
                 )
                 text_offset = 0
                 if 'Planeswalker' in face.TYPE_LINE[0]:
-                    text_offset = custom_art.height  - DPI * (1.55) 
+                    text_offset = custom_art.height - DPI * (1.55)
                     loyalty = '[' + face.LOYALTY + ']'
                     loyal_len = draw.textlength(loyalty, font=font_large)
                     draw.text(
@@ -233,7 +235,10 @@ with open('../input.csv', 'r') as file:
                     else:
                         size = font_large
                     draw.text(
-                        (MARGIN, DPI * 1.95 + text_offset + (size_large / 2 - size.size / 2)),
+                        (
+                            MARGIN,
+                            DPI * 1.95 + text_offset + (size_large / 2 - size.size / 2)
+                        ),
                         face.TYPE_LINE[0],
                         font=size,
                         fill=TEXT_COLOR
@@ -420,13 +425,13 @@ with open('../input.csv', 'r') as file:
 
                 if face.ORACLE_TEXT:
                     draw.text(
-                        (MARGIN + 80, DPI * 0.33),
+                        (MARGIN + 80, MARGIN + DPI*1/8),
                         face.ORACLE_TEXT[0],
                         font=font_medium,
                         fill=TEXT_COLOR
                     )
                     flip_draw.text(
-                        (MARGIN + 80, DPI * 0.33 + CENTER_GAP + BOTTOM_OFFSET),
+                        (MARGIN + 80, MARGIN + DPI*1/8 + CENTER_GAP + BOTTOM_OFFSET),
                         face.ORACLE_TEXT[1],
                         font=font_medium,
                         fill=TEXT_COLOR
