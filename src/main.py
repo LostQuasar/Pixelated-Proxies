@@ -31,7 +31,8 @@ MANA_COLOR = {
     'R': MANA_R_COLOR,
     'G': MANA_G_COLOR
 }
-PHYREXIAN = "P"
+PHYREXIAN = 'P'
+
 
 def download_art_crop(face: CardFace):
     global DOWN_COUNT
@@ -68,20 +69,26 @@ def draw_mana_cost(right_bound, top_bound, font, cost, draw):
         char = cost[::-1][i]
         if char in MANA_COLOR.keys():
             color = MANA_COLOR[char]
-            if  cost[::-1][i-1] != "/":
+            if cost[::-1][i - 1] != '/':
                 color_list[-1] = color
-            if cost[::-1][i-2] == PHYREXIAN:
+            if cost[::-1][i - 2] == PHYREXIAN:
                 color_list[-1] = color
                 color_list[-2] = color
                 color_list[-3] = color
-        elif char == "{":
+
+        elif char == '{':
             color = color_list[-1]
         else:
             color = TEXT_COLOR
         color_list.append(color)
-    for i in range(len(color_list)):    
+    for i in range(len(color_list)):
         offset += draw.textlength(cost[::-1][i], font=font)
-        draw.text((right_bound - offset, top_bound), cost[::-1][i], font=font, fill=color_list[i])
+        draw.text(
+            (right_bound - offset, top_bound),
+            cost[::-1][i],
+            font=font,
+            fill=color_list[i]
+        )
 
 
 def draw_oracle_text(left_bound, top_bound, font_size, font, oracle_text, draw):
@@ -104,6 +111,7 @@ def draw_oracle_text(left_bound, top_bound, font_size, font, oracle_text, draw):
             )
             offset += draw.textlength(part, font=font)
         oracle_vert_offset += font_size + 4
+
 
 with open('../input.csv', 'r') as file:
     size_large = 85
@@ -143,8 +151,7 @@ with open('../input.csv', 'r') as file:
 
             card_img = Image.new('RGB', (WIDTH, HEIGHT), BACKGROUND_COLOR)
 
-
-            #PASTE IMAGE
+            # PASTE IMAGE
             with Image.open(f'../pixel/{face.PATH}.png') as custom_art:
                 vert_offset = 0
                 hor_offset = 0
@@ -434,9 +441,9 @@ with open('../input.csv', 'r') as file:
             if face.LAYOUT is Layout.CLASS or face.LAYOUT is Layout.SAGA:
                 if face.LAYOUT is Layout.CLASS:
                     offset = WIDTH / 2 - MARGIN + 80
-                else: 
+                else:
                     offset = 0
-                    
+
                 draw.text(
                     (MARGIN, MARGIN),
                     title_prefix + face.NAME[0],
@@ -450,7 +457,7 @@ with open('../input.csv', 'r') as file:
                 if face.ORACLE_TEXT:
                     draw_oracle_text(
                         MARGIN + offset,
-                        MARGIN + DPI * 2/8,
+                        MARGIN + DPI * 2 / 8,
                         size_medium,
                         font_medium,
                         face.ORACLE_TEXT[0],
@@ -496,7 +503,7 @@ with open('../input.csv', 'r') as file:
                         font=font_large,
                         fill=TEXT_COLOR
                     )
-                
+
             card_img.save(f'../cards/{face.PATH}.png')
             GEN_COUNT += 1
 
