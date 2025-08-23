@@ -147,7 +147,7 @@ class CardInfo:
         else:
             for i in range(len(card_info['card_faces'])):
                 if "Saga" in  card_info['card_faces'][0]['type_line'] and Layout.TRANSFORM:
-                    layouts = [Layout.SAGA, Layout.NORMAL]
+                    layouts = [Layout.SAGA, Layout.TRANSFORM]
                 else:
                     layouts = [layout, layout]
                 self.FACES.append(
