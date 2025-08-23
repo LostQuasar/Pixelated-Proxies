@@ -42,7 +42,7 @@ def download_art_crop(face: CardFace):
     time.sleep(1)
 
 
-def generate_custom_art(face: CardFace, mode):
+def generate_custom_art(face: CardFace):
     global CUSTOM_COUNT
     with Image.open(f'art_crops/{face.PATH}.jpg') as art_crop:
         pixel = art_crop.resize(
@@ -87,7 +87,7 @@ def draw_oracle_text(left_bound, top_bound, font_size, font, oracle_text, draw):
         broken_line = re.split(r'{|}', line)
         for part in broken_line:
             color = TEXT_COLOR
-            if len(part) == 1 and part not in [".", "(", ")"]:
+            if len(part) == 1 and part not in ['.', '(', ')']:
                 if part in MANA_COLOR.keys():
                     color = MANA_COLOR[part]
                 part = '{' + part + '}'
@@ -100,6 +100,7 @@ def draw_oracle_text(left_bound, top_bound, font_size, font, oracle_text, draw):
             offset += draw.textlength(part, font=font)
         oracle_vert_offset += font_size + 4
 
+
 with open('input.csv', 'r') as file:
     size_large = 85
     size_medium = 65
@@ -111,6 +112,14 @@ with open('input.csv', 'r') as file:
     font_small = ImageFont.truetype('Hack-Regular.ttf', size_small)
     font_small_italic = ImageFont.truetype('Hack-Italic.ttf', size_small)
     title_prefix = '> '
+
+    if not os.path.exists('pixel'):
+        os.makedirs('pixel')
+    if not os.path.exists('art_crops'):
+        os.makedirs('art_crops')
+    if not os.path.exists('cards'):
+        os.makedirs('cards')
+
     for line in tqdm(file.readlines()):
         line = line.strip().split(',')
         if line[0].startswith('plst'):
@@ -130,21 +139,34 @@ with open('input.csv', 'r') as file:
 
             card_img = Image.new('RGB', (WIDTH, HEIGHT), BACKGROUND_COLOR)
 
-            with Image.open(f'{MODE}/{face.PATH}.png') as custom_art:
+            with Image.open(f'pixel/{face.PATH}.png') as custom_art:
                 vert_offset = 0
                 hor_offset = 0
+
                 if face.LAYOUT is Layout.SPLIT:
                     custom_art = custom_art.rotate(90, expand=True)
                     vert_offset = 570 - 80
                     hor_offset = 225
+
                 if face.FULL_ART:
                     vert_offset = 500
+
                 if face.LAYOUT is Layout.FLIP:
                     vert_offset = 570 - BOTTOM_OFFSET
+
+                if face.LAYOUT is Layout.SAGA:
+                    vert_offset = 570 - BOTTOM_OFFSET
+                    hor_offset = -custom_art.width * 2
+
+                if face.LAYOUT is Layout.CLASS:
+                    vert_offset = 570 - BOTTOM_OFFSET
+                    hor_offset = custom_art.width * 2
+
                 custom_art = custom_art.resize(
                     (int(custom_art.width * 3.8), int(custom_art.height * 3.8)),
                     resample=Image.Resampling.NEAREST
                 )
+
                 card_img.paste(
                     custom_art,
                     (
@@ -155,7 +177,10 @@ with open('input.csv', 'r') as file:
                     )
                 )
 
+            # SETUP DRAW OBJECT
             draw = ImageDraw.Draw(card_img)
+
+            # DEFAULT LAYOUT
             if face.LAYOUT is Layout.NORMAL or face.LAYOUT is Layout.TRANSFORM:
                 draw.text(
                     (MARGIN, MARGIN),
@@ -168,7 +193,7 @@ with open('input.csv', 'r') as file:
                 )
                 if not face.FULL_ART:
                     type_len = draw.textlength(face.TYPE_LINE[0], font=font_large)
-                    if type_len > (WIDTH - (MARGIN*2)):
+                    if type_len > (WIDTH - (MARGIN * 2)):
                         size = font_medium_bold
                     else:
                         size = font_large
@@ -200,6 +225,8 @@ with open('input.csv', 'r') as file:
                         fill=TEXT_COLOR,
                         spacing=10
                     )
+
+            # SPLIT LAYOUT (Ex. ROOMS)
             elif face.LAYOUT is Layout.SPLIT:
                 rot_image = Image.new('RGBA', (HEIGHT, WIDTH), (0, 0, 0, 0))
                 rot_draw = ImageDraw.Draw(rot_image)
@@ -257,6 +284,8 @@ with open('input.csv', 'r') as file:
                     )
                 rot_image = rot_image.rotate(90, expand=True)
                 card_img.paste(rot_image, mask=rot_image)
+
+            # ADVENTURE LAYOUT
             elif face.LAYOUT is Layout.ADVENTURE:
                 draw.text(
                     (MARGIN, MARGIN), title_prefix + face.NAME[0], font=font_large
@@ -322,6 +351,8 @@ with open('input.csv', 'r') as file:
                     font=font_medium_bold,
                     fill=TEXT_COLOR
                 )
+
+            # FLIP LAYOUT
             elif face.LAYOUT is Layout.FLIP:
                 flip_image = Image.new('RGBA', (WIDTH, HEIGHT), (0, 0, 0, 0))
                 flip_draw = ImageDraw.Draw(flip_image)
@@ -393,38 +424,74 @@ with open('input.csv', 'r') as file:
                 flip_image = flip_image.rotate(180)
                 card_img.paste(flip_image, mask=flip_image)
 
-            draw.text(
-                (MARGIN, HEIGHT - MARGIN - size_small * 2),
-                f'{card.CARD_NUMBER}/{card.SET_COUNT} {card.RARITY.name}\n{card.SET_CODE} >{card.ARTIST}',
-                font=font_small,
-                fill=TEXT_COLOR
-            )
-
-            txt_string = codecs.decode(
-                bytes.fromhex('5962666744686e666e65204365626b6c').decode('utf-8'),
-                'rot13'
-            )
-            text_len = draw.textlength(txt_string, font=font_small_italic)
-            draw.text(
-                (WIDTH - MARGIN - text_len, HEIGHT - MARGIN - size_small),
-                txt_string,
-                font=font_small_italic,
-                fill=TEXT_COLOR
-            )
-
-            if face.POWER and face.TOUGHNESS and face.LAYOUT is not Layout.FLIP:
-                creature_text = f'({face.POWER[0]}/{face.TOUGHNESS[0]})'
-                text_len = draw.textlength(creature_text, font=font_large)
+            # SAGA and CLASS LAYOUT
+            if face.LAYOUT is Layout.CLASS or face.LAYOUT is Layout.SAGA:
+                if face.LAYOUT is Layout.CLASS:
+                    offset = WIDTH / 2 - MARGIN + 80
+                else: 
+                    offset = 0
+                    
                 draw.text(
-                    (
-                        WIDTH - MARGIN - text_len,
-                        HEIGHT - MARGIN - (size_large + size_small + 30)
-                    ),
-                    creature_text,
+                    (MARGIN, MARGIN),
+                    title_prefix + face.NAME[0],
+                    font=font_large,
+                    fill=TEXT_COLOR
+                )
+                draw_mana_cost(
+                    WIDTH - MARGIN, MARGIN, font_large, face.MANA_COST[0], draw
+                )
+
+                if face.ORACLE_TEXT:
+                    draw_oracle_text(
+                        MARGIN + offset,
+                        MARGIN + DPI * 2/8,
+                        size_medium,
+                        font_medium,
+                        face.ORACLE_TEXT[0],
+                        draw
+                    )
+                draw.text(
+                    (MARGIN, DPI * 2.95),
+                    face.TYPE_LINE[0],
                     font=font_large,
                     fill=TEXT_COLOR
                 )
 
+
+            # DRAW BOTTOM INFO
+            if True:
+                draw.text(
+                    (MARGIN, HEIGHT - MARGIN - size_small * 2),
+                    f'{card.CARD_NUMBER}/{card.SET_COUNT} {card.RARITY.name}\n{card.SET_CODE} >{card.ARTIST}',
+                    font=font_small,
+                    fill=TEXT_COLOR
+                )
+
+                txt_string = codecs.decode(
+                    bytes.fromhex('5962666744686e666e65204365626b6c').decode('utf-8'),
+                    'rot13'
+                )
+                text_len = draw.textlength(txt_string, font=font_small_italic)
+                draw.text(
+                    (WIDTH - MARGIN - text_len, HEIGHT - MARGIN - size_small),
+                    txt_string,
+                    font=font_small_italic,
+                    fill=TEXT_COLOR
+                )
+                # DRAW POWER AND TOUGHNESS FOR DEFAULT LAYOUT
+                if face.POWER and face.TOUGHNESS and face.LAYOUT is not Layout.FLIP:
+                    creature_text = f'({face.POWER[0]}/{face.TOUGHNESS[0]})'
+                    text_len = draw.textlength(creature_text, font=font_large)
+                    draw.text(
+                        (
+                            WIDTH - MARGIN - text_len,
+                            HEIGHT - MARGIN - (size_large + size_small + 30)
+                        ),
+                        creature_text,
+                        font=font_large,
+                        fill=TEXT_COLOR
+                    )
+                
             card_img.save(f'cards/{face.PATH}.png')
             GEN_COUNT += 1
 

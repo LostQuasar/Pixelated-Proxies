@@ -2,12 +2,16 @@ from enum import Enum
 from textwrap import wrap
 from typing import List, Optional
 import requests, re
+
 # COMMENT OUT TO SHOW REMINDER TEXT
 REMOVAL_LINES = [
     '(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)',
     "(This creature can't be blocked except by creatures with flying or reach.)",
     "(Attacking doesn't cause this creature to tap.)",
-    '(This creature can block creatures with flying.)'
+    '(This creature can block creatures with flying.)',
+    "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+    "(As this Saga enters and after your draw step, add a lore counter.)",
+    "(Gain the next level as a sorcery to add its ability.)"
 ]
 REMOVAL_PATTERN = r'|'.join(map(re.escape, REMOVAL_LINES))
 
@@ -28,7 +32,7 @@ class Layout(Enum):
     FLIP = 'flip'
     DUAL_FACE = 'modal_dfc'
     CLASS = 'class'
-
+    SAGA = 'saga'
 
 class CardFace:
     NAME: list[str]
@@ -50,9 +54,13 @@ class CardFace:
         self.ART = card_face['image_uris']['art_crop']
         self.PATH = path
         self.TYPE_LINE = str(card_face['type_line']).split(' // ')
-        DEFAULT_WIDTH = 44
+        WIDTH = 44
         HOR_SPLIT_WIDTH = 28
         VER_SPLIT_WIDTH = 22
+        if layout is Layout.SPLIT:
+            WIDTH = HOR_SPLIT_WIDTH
+        if layout in [Layout.ADVENTURE, Layout.SAGA, Layout.CLASS]:
+            WIDTH = VER_SPLIT_WIDTH
 
         if 'card_faces' in card_face:
             oracle_text = []
@@ -60,19 +68,14 @@ class CardFace:
                 face_text = []
                 for line in face['oracle_text'].split('\n'):
                     line = re.sub(REMOVAL_PATTERN, '', line)
-                    width = DEFAULT_WIDTH
-                    if layout is Layout.SPLIT:
-                        width = HOR_SPLIT_WIDTH
-                    if layout is Layout.ADVENTURE:
-                        width = VER_SPLIT_WIDTH
-                    line = '\n'.join(wrap(line, width=width))
+                    line = '\n'.join(wrap(line, width=WIDTH))
                     face_text.append(line)
                 oracle_text.append('\n'.join(face_text))
         elif 'oracle_text' in card_face:
             oracle_text = []
             for line in card_face['oracle_text'].split('\n'):
                 line = re.sub(REMOVAL_PATTERN, '', line)
-                line = '\n'.join(wrap(line, width=DEFAULT_WIDTH))
+                line = '\n'.join(wrap(line, width=WIDTH))
                 oracle_text.append(line + '\n')
             oracle_text = ['\n'.join(oracle_text)]
         else:
@@ -85,18 +88,13 @@ class CardFace:
                 face_text = []
                 if 'flavor_text' in face:
                     for line in face['flavor_text'].split('\n'):
-                        width = (
-                            HOR_SPLIT_WIDTH
-                            if layout is Layout.SPLIT
-                            else VER_SPLIT_WIDTH
-                        )
-                        line = '\n'.join(wrap(line, width=width))
+                        line = '\n'.join(wrap(line, width=WIDTH))
                         face_text.append(line)
                     flavor_text.append('\n'.join(face_text))
         elif 'flavor_text' in card_face:
             flavor_text = []
             for line in card_face['flavor_text'].split('\n'):
-                line = '\n'.join(wrap(line, width=DEFAULT_WIDTH))
+                line = '\n'.join(wrap(line, width=WIDTH))
                 flavor_text.append(line)
             flavor_text = ['\n'.join(flavor_text)]
         else:
@@ -140,58 +138,27 @@ class CardInfo:
         self.FACES = []
         self.RARITY = Rarity(card_info['rarity'])
         self.ARTIST = card_info['artist']
-        match layout:
-            case Layout.NORMAL:
+        if layout in [Layout.ADVENTURE, Layout.NORMAL, Layout.CLASS, Layout.SAGA, Layout.SPLIT, Layout.FLIP]:
+            self.FACES.append(
+                CardFace(
+                    card_info, f"{self.SET_CODE}-{self.CARD_NUMBER}-00", self.LAYOUT
+                )
+            )
+        else:
+            for i in range(len(card_info['card_faces'])):
+                if "Saga" in  card_info['card_faces'][0]['type_line'] and Layout.TRANSFORM:
+                    layouts = [Layout.SAGA, Layout.NORMAL]
+                else:
+                    layouts = [layout, layout]
                 self.FACES.append(
                     CardFace(
-                        card_info, f"{self.SET_CODE}-{self.CARD_NUMBER}-00", self.LAYOUT
+                        card_info['card_faces'][i],
+                        f"{self.SET_CODE}-{self.CARD_NUMBER}-{str(i).zfill(2)}",
+                        layouts[i]
                     )
                 )
-            case Layout.TRANSFORM:
-                i = 0
-                for face in card_info['card_faces']:
-                    self.FACES.append(
-                        CardFace(
-                            face,
-                            f"{self.SET_CODE}-{self.CARD_NUMBER}-{str(i).zfill(2)}",
-                            self.LAYOUT
-                        )
-                    )
-                    i += 1
-            case Layout.DUAL_FACE:
-                i = 0
-                for face in card_info['card_faces']:
-                    self.FACES.append(
-                        CardFace(
-                            face,
-                            f"{self.SET_CODE}-{self.CARD_NUMBER}-{str(i).zfill(2)}",
-                            self.LAYOUT
-                        )
-                    )
-                    i += 1
-            case Layout.SPLIT:
-                self.FACES.append(
-                    CardFace(
-                        card_info, f"{self.SET_CODE}-{self.CARD_NUMBER}-00", self.LAYOUT
-                    )
-                )
-            case Layout.ADVENTURE:
-                self.FACES.append(
-                    CardFace(
-                        card_info, f"{self.SET_CODE}-{self.CARD_NUMBER}-00", self.LAYOUT
-                    )
-                )
-            case Layout.FLIP:
-                self.FACES.append(
-                    CardFace(
-                        card_info, f"{self.SET_CODE}-{self.CARD_NUMBER}-00", self.LAYOUT
-                    )
-                )
-            case _:
-                print(f"Format {self.LAYOUT.name} from card {card_info['name']} not supported")
-                exit()
+                i += 1
 
-                
 
     def get_set_count(self, code):
         SET_URL = f"https://api.scryfall.com/sets/{code}"
