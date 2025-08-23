@@ -2,4 +2,4 @@
 An automated pixelated proxy generator using scryfall API to create Magic The Gathering proxies.
 
 ## Example
-![](Example.png)
+<img src="Example.png" width="500" />
