@@ -11,7 +11,8 @@ REMOVAL_LINES = [
     '(This creature can block creatures with flying.)',
     '(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)',
     '(As this Saga enters and after your draw step, add a lore counter.)',
-    '(Gain the next level as a sorcery to add its ability.)'
+    '(Gain the next level as a sorcery to add its ability.)',
+    "(This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
 ]
 REMOVAL_PATTERN = r'|'.join(map(re.escape, REMOVAL_LINES))
 
