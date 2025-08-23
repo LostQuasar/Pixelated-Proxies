@@ -9,9 +9,9 @@ REMOVAL_LINES = [
     "(This creature can't be blocked except by creatures with flying or reach.)",
     "(Attacking doesn't cause this creature to tap.)",
     '(This creature can block creatures with flying.)',
-    "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
-    "(As this Saga enters and after your draw step, add a lore counter.)",
-    "(Gain the next level as a sorcery to add its ability.)"
+    '(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)',
+    '(As this Saga enters and after your draw step, add a lore counter.)',
+    '(Gain the next level as a sorcery to add its ability.)'
 ]
 REMOVAL_PATTERN = r'|'.join(map(re.escape, REMOVAL_LINES))
 
@@ -34,6 +34,7 @@ class Layout(Enum):
     CLASS = 'class'
     SAGA = 'saga'
 
+
 class CardFace:
     NAME: list[str]
     MANA_COST: list[str]
@@ -46,6 +47,8 @@ class CardFace:
     PATH: str
     LAYOUT: Layout
     FULL_ART: bool
+    ALTERNATE_TYPE = Optional[str]
+    LOYALTY = Optional[str]
 
     def __init__(self, card_face, path, layout):
         self.NAME = str(card_face['name']).split(' // ')
@@ -116,7 +119,14 @@ class CardFace:
         elif 'power' in card_face and 'toughness' in card_face:
             self.POWER.append(card_face['power'])
             self.TOUGHNESS.append(card_face['toughness'])
-
+        if 'alternate_type' in card_face:
+            self.ALTERNATE_TYPE = card_face['alternate_type']
+        else:
+            self.ALTERNATE_TYPE = False
+        if 'loyalty' in card_face:
+            self.LOYALTY = card_face['loyalty']
+        else:
+            self.LOYALTY = False
 
 class CardInfo:
     LAYOUT: Layout
@@ -138,7 +148,14 @@ class CardInfo:
         self.FACES = []
         self.RARITY = Rarity(card_info['rarity'])
         self.ARTIST = card_info['artist']
-        if layout in [Layout.ADVENTURE, Layout.NORMAL, Layout.CLASS, Layout.SAGA, Layout.SPLIT, Layout.FLIP]:
+        if layout in [
+            Layout.ADVENTURE,
+            Layout.NORMAL,
+            Layout.CLASS,
+            Layout.SAGA,
+            Layout.SPLIT,
+            Layout.FLIP
+        ]:
             self.FACES.append(
                 CardFace(
                     card_info, f"{self.SET_CODE}-{self.CARD_NUMBER}-00", self.LAYOUT
@@ -146,7 +163,14 @@ class CardInfo:
             )
         else:
             for i in range(len(card_info['card_faces'])):
-                if "Saga" in  card_info['card_faces'][0]['type_line'] and Layout.TRANSFORM:
+                if layout == Layout.DUAL_FACE:
+                    card_info['card_faces'][i]['alternate_type'] = card_info[
+                        'card_faces'
+                    ][1 - i]['type_line']
+                if (
+                    'Saga' in card_info['card_faces'][0]['type_line']
+                    and Layout.TRANSFORM
+                ):
                     layouts = [Layout.SAGA, Layout.TRANSFORM]
                 else:
                     layouts = [layout, layout]
@@ -158,7 +182,6 @@ class CardInfo:
                     )
                 )
                 i += 1
-
 
     def get_set_count(self, code):
         SET_URL = f"https://api.scryfall.com/sets/{code}"

@@ -89,6 +89,7 @@ def draw_mana_cost(right_bound, top_bound, font, cost, draw):
             font=font,
             fill=color_list[i]
         )
+    return offset
 
 
 def draw_oracle_text(left_bound, top_bound, font_size, font, oracle_text, draw):
@@ -168,17 +169,21 @@ with open('../input.csv', 'r') as file:
                     vert_offset = 570 - BOTTOM_OFFSET
 
                 if face.LAYOUT is Layout.SAGA:
-                    vert_offset = 570 - BOTTOM_OFFSET
+                    vert_offset = 570 - BOTTOM_OFFSET + 70
                     hor_offset = -custom_art.width * 2
 
                 if face.LAYOUT is Layout.CLASS:
-                    vert_offset = 570 - BOTTOM_OFFSET
+                    vert_offset = 570 - BOTTOM_OFFSET + 70
                     hor_offset = custom_art.width * 2
+
 
                 custom_art = custom_art.resize(
                     (int(custom_art.width * 3.8), int(custom_art.height * 3.8)),
                     resample=Image.Resampling.NEAREST
                 )
+
+                if 'Planeswalker' in face.TYPE_LINE[0]:
+                    vert_offset = custom_art.height/2  - (DPI * 3/4)
 
                 card_img.paste(
                     custom_art,
@@ -194,16 +199,33 @@ with open('../input.csv', 'r') as file:
             draw = ImageDraw.Draw(card_img)
 
             # DEFAULT LAYOUT
-            if face.LAYOUT is Layout.NORMAL or face.LAYOUT is Layout.TRANSFORM:
-                draw.text(
-                    (MARGIN, MARGIN),
-                    title_prefix + face.NAME[0],
-                    font=font_large,
-                    fill=TEXT_COLOR
-                )
-                draw_mana_cost(
+            if face.LAYOUT in [Layout.NORMAL, Layout.TRANSFORM, Layout.DUAL_FACE]:
+                offset = draw_mana_cost(
                     WIDTH - MARGIN, MARGIN, font_large, face.MANA_COST[0], draw
                 )
+                if draw.textlength(title_prefix + face.NAME[0], font_large) + offset > (
+                    WIDTH - MARGIN * 2
+                ):
+                    size = font_medium_bold
+                else:
+                    size = font_large
+                draw.text(
+                    (MARGIN, MARGIN + (size_large / 2 - size.size / 2)),
+                    title_prefix + face.NAME[0],
+                    font=size,
+                    fill=TEXT_COLOR
+                )
+                text_offset = 0
+                if 'Planeswalker' in face.TYPE_LINE[0]:
+                    text_offset = custom_art.height  - DPI * (1.55) 
+                    loyalty = '[' + face.LOYALTY + ']'
+                    loyal_len = draw.textlength(loyalty, font=font_large)
+                    draw.text(
+                        (WIDTH / 2 - loyal_len / 2, HEIGHT - MARGIN - DPI / 6),
+                        loyalty,
+                        fill=TEXT_COLOR,
+                        font=font_large
+                    )
                 if not face.FULL_ART:
                     type_len = draw.textlength(face.TYPE_LINE[0], font=font_large)
                     if type_len > (WIDTH - (MARGIN * 2)):
@@ -211,7 +233,7 @@ with open('../input.csv', 'r') as file:
                     else:
                         size = font_large
                     draw.text(
-                        (MARGIN, DPI * 1.95),
+                        (MARGIN, DPI * 1.95 + text_offset + (size_large / 2 - size.size / 2)),
                         face.TYPE_LINE[0],
                         font=size,
                         fill=TEXT_COLOR
@@ -219,7 +241,7 @@ with open('../input.csv', 'r') as file:
                     if face.ORACLE_TEXT:
                         draw_oracle_text(
                             MARGIN + 80,
-                            DPI * 2.1,
+                            DPI * 2.1 + text_offset,
                             size_medium,
                             font_medium,
                             face.ORACLE_TEXT[0],
@@ -231,12 +253,21 @@ with open('../input.csv', 'r') as file:
                         (
                             MARGIN + 80,
                             DPI * 2.1
+                            + text_offset
                             + (face.ORACLE_TEXT[0].count('\n') + 1.5) * size_medium
                         ),
                         face.FLAVOR_TEXT[0],
                         font=font_medium_italic,
                         fill=TEXT_COLOR,
                         spacing=10
+                    )
+
+                if face.LAYOUT == Layout.DUAL_FACE:
+                    draw.text(
+                        (MARGIN, HEIGHT - MARGIN - size_small * 2 - size_medium - 60),
+                        '< ' + face.ALTERNATE_TYPE,
+                        font=font_medium_bold,
+                        fill=TEXT_COLOR
                     )
 
             # SPLIT LAYOUT (Ex. ROOMS)
