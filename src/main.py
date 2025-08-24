@@ -36,11 +36,16 @@ PHYREXIAN = 'P'
 
 def download_art_crop(face: CardFace):
     global DOWN_COUNT
+    global LAST_FETCH
+
+    time_since_last = time.time() - LAST_FETCH
+    if time_since_last < API_DELAY:
+        time.sleep(API_DELAY - time_since_last)
     img = Image.open(requests.get(face.ART, stream=True).raw)
+    LAST_FETCH = time.time()
+
     img.save(f'../art_crops/{face.PATH}.jpg')
     DOWN_COUNT += 1
-    time.sleep(1)
-
 
 def generate_custom_art(face: CardFace):
     global CUSTOM_COUNT
