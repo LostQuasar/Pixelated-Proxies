@@ -1,8 +1,11 @@
+import time 
 from enum import Enum
 from textwrap import wrap
 from typing import Optional
 import requests, re
 
+API_DELAY = .5
+LAST_FETCH = 0.0
 # COMMENT OUT TO SHOW REMINDER TEXT
 REMOVAL_LINES = [
     '(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)',
@@ -140,8 +143,15 @@ class CardInfo:
     FACES: list[CardFace]
 
     def __init__(self, set_code, collect_num):
+        global LAST_FETCH
         CARD_URL = f"https://api.scryfall.com/cards/{set_code}/{collect_num}"
+
+        time_since_last = time.time() - LAST_FETCH
+        if time_since_last < API_DELAY:
+            time.sleep(API_DELAY - time_since_last)
         card_info = requests.get(CARD_URL).json()
+        LAST_FETCH = time.time()
+         
         layout = Layout(card_info['layout'])
         self.LAYOUT = layout
         self.SET_CODE = str(card_info['set']).upper()
