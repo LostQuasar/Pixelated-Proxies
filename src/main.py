@@ -165,7 +165,7 @@ with open('../input.csv', 'r') as file:
                     vert_offset = 570 - 80
                     hor_offset = 225
 
-                if face.FULL_ART:
+                if face.TEXTLESS:
                     vert_offset = 500
 
                 if face.LAYOUT is Layout.FLIP:
@@ -228,7 +228,7 @@ with open('../input.csv', 'r') as file:
                         fill=TEXT_COLOR,
                         font=font_large
                     )
-                if not face.FULL_ART:
+                if not face.TEXTLESS:
                     type_len = draw.textlength(face.TYPE_LINE[0], font=font_large)
                     if type_len > (WIDTH - (MARGIN * 2)):
                         size = font_medium_bold

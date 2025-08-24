@@ -12,10 +12,11 @@ REMOVAL_LINES = [
     '(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)',
     '(As this Saga enters and after your draw step, add a lore counter.)',
     '(Gain the next level as a sorcery to add its ability.)',
-    "(This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
+    "(This creature can deal excess combat damage to the player or planeswalker it's attacking.)",
+    "Station (Tap another creature you control: Put charge counters equal to its power on this Spacecraft. Station only as a sorcery. It's an artifact creature at 5+.)",
+    "Fuse (You may cast one or both halves of this card from your hand.)",
 ]
-REMOVAL_PATTERN = r'|'.join(map(re.escape, REMOVAL_LINES))
-
+REMOVAL_PATTERN = r'|'.join(map(re.escape, REMOVAL_LINES)).replace("5", r"\d")
 
 class Rarity(Enum):
     C = 'common'
@@ -47,7 +48,7 @@ class CardFace:
     ART: str
     PATH: str
     LAYOUT: Layout
-    FULL_ART: bool
+    TEXTLESS: bool
     ALTERNATE_TYPE = Optional[str]
     LOYALTY = Optional[str]
 
@@ -65,50 +66,33 @@ class CardFace:
             WIDTH = HOR_SPLIT_WIDTH
         if layout in [Layout.ADVENTURE, Layout.SAGA, Layout.CLASS]:
             WIDTH = VER_SPLIT_WIDTH
-
+            
+        oracle_text = []
         if 'card_faces' in card_face:
-            oracle_text = []
             for face in card_face['card_faces']:
-                face_text = []
-                for line in face['oracle_text'].split('\n'):
-                    line = re.sub(REMOVAL_PATTERN, '', line)
-                    line = '\n'.join(wrap(line, width=WIDTH))
-                    face_text.append(line)
-                oracle_text.append('\n'.join(face_text))
+                if 'oracle_text' in face:
+                    oracle_text.append(self.wrap_oracle_text(face, WIDTH))
         elif 'oracle_text' in card_face:
-            oracle_text = []
-            for line in card_face['oracle_text'].split('\n'):
-                line = re.sub(REMOVAL_PATTERN, '', line)
-                line = '\n'.join(wrap(line, width=WIDTH))
-                oracle_text.append(line + '\n')
-            oracle_text = ['\n'.join(oracle_text)]
+            oracle_text.append(self.wrap_oracle_text(card_face, WIDTH))
         else:
             oracle_text = None
         self.ORACLE_TEXT = oracle_text
 
+        flavor_text = []
         if 'card_faces' in card_face:
-            flavor_text = []
             for face in card_face['card_faces']:
-                face_text = []
                 if 'flavor_text' in face:
-                    for line in face['flavor_text'].split('\n'):
-                        line = '\n'.join(wrap(line, width=WIDTH))
-                        face_text.append(line)
-                    flavor_text.append('\n'.join(face_text))
+                    flavor_text.append(self.wrap_flavor_text(face, WIDTH))
         elif 'flavor_text' in card_face:
-            flavor_text = []
-            for line in card_face['flavor_text'].split('\n'):
-                line = '\n'.join(wrap(line, width=WIDTH))
-                flavor_text.append(line)
-            flavor_text = ['\n'.join(flavor_text)]
+            flavor_text.append(self.wrap_flavor_text(card_face, WIDTH))
         else:
             flavor_text = None
         self.FLAVOR_TEXT = flavor_text
 
-        if 'full_art' in card_face and 'land' in str(self.TYPE_LINE).lower():
-            self.FULL_ART = bool(card_face['full_art'])
+        if 'textless' in card_face:
+            self.TEXTLESS = bool(card_face['textless'])
         else:
-            self.FULL_ART = False
+            self.TEXTLESS = False
 
         self.POWER = []
         self.TOUGHNESS = []
@@ -128,6 +112,23 @@ class CardFace:
             self.LOYALTY = card_face['loyalty']
         else:
             self.LOYALTY = False
+
+    def wrap_oracle_text(self, card_face, WIDTH):
+        oracle_text = []
+        for line in card_face['oracle_text'].split('\n'):
+            line = re.sub(REMOVAL_PATTERN, '', line)
+            if line == "":
+                continue
+            line = '\n'.join(wrap(line, width=WIDTH))
+            oracle_text.append(line + '\n')
+        return '\n'.join(oracle_text)
+    
+    def wrap_flavor_text(self, card_face, WIDTH):
+        flavor_text = []
+        for line in card_face['flavor_text'].split('\n'):
+            line = '\n'.join(wrap(line, width=WIDTH))
+            flavor_text.append(line + '\n')
+        return '\n'.join(flavor_text)
 
 class CardInfo:
     LAYOUT: Layout
