@@ -58,10 +58,6 @@ def generate_custom_art(face: CardFace):
         pixel = ImageEnhance.Contrast(pixel).enhance(1.2)
         pixel = ImageEnhance.Color(pixel).enhance(1.2)
 
-        pixel = pixel.resize(
-            (int(pixel.width * 6), int(pixel.height * 6)),
-            resample=Image.Resampling.NEAREST
-        )
     pixel.save(f'../pixel/{face.PATH}.png')
 
     CUSTOM_COUNT += 1
@@ -178,14 +174,14 @@ with open('../input.csv', 'r') as file:
 
                 if face.LAYOUT is Layout.SAGA:
                     vert_offset = 570 - BOTTOM_OFFSET + 70
-                    hor_offset = -custom_art.width * 2
+                    hor_offset = -DPI * .5
 
                 if face.LAYOUT is Layout.CLASS:
                     vert_offset = 570 - BOTTOM_OFFSET + 70
-                    hor_offset = custom_art.width * 2
+                    hor_offset = DPI * .5
 
                 custom_art = custom_art.resize(
-                    (int(custom_art.width * 3.8), int(custom_art.height * 3.8)),
+                    (int(custom_art.width * 22), int(custom_art.height * 22)),
                     resample=Image.Resampling.NEAREST
                 )
 
