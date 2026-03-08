@@ -1,3 +1,4 @@
+from cmath import sqrt
 import codecs
 import os
 import time
@@ -74,17 +75,26 @@ def draw_mana_cost(right_bound, top_bound, font, cost, draw):
             color_list.append(MANA_COLOR[char])
             if cost[i - 1] == '{':
                 color_list[i - 1] = MANA_COLOR[char]
+            elif cost[i - 1] == '/':
+                R1, G1, B1 = MANA_COLOR[char]
+                R2, G2, B2 = color_list[i - 1]
+                mix_color = (
+                    int(sqrt((R1**2 + R2**2) / 2).real),
+                    int(sqrt((G1**2 + G2**2) / 2).real),
+                    int(sqrt((B1**2 + B2**2) / 2).real)
+                )
+                color_list[i - 1] = mix_color
         elif char in ['}', '/', 'P']:
             color_list.append(color_list[i - 1])
         else:
             color_list.append(TEXT_COLOR)
     matches = re.search('\\w/P', cost)
     if matches:
-        match = matches.group()
-        i = cost.index(match)
+        matched = matches.group()
+        i = cost.index(matched)
         color_list.pop(i)
         color_list.pop(i)
-        cost = re.sub(r"\w/P", PHYREXIAN, cost)
+        cost = cost.replace(matched, PHYREXIAN)
     cost = cost[::-1]
     color_list.reverse()
     for i in range(len(cost)):
