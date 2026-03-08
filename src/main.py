@@ -5,6 +5,7 @@ import requests
 from PIL import Image, ImageEnhance, ImageDraw, ImageFont
 from card_info import *
 from tqdm import tqdm
+import piltextbox
 
 DPI = 900
 
@@ -31,7 +32,7 @@ MANA_COLOR = {
     'R': MANA_R_COLOR,
     'G': MANA_G_COLOR
 }
-PHYREXIAN = 'P'
+PHYREXIAN = 'Φ'
 
 
 def download_art_crop(face: CardFace):
@@ -46,6 +47,7 @@ def download_art_crop(face: CardFace):
 
     img.save(f'../art_crops/{face.PATH}.jpg')
     DOWN_COUNT += 1
+
 
 def generate_custom_art(face: CardFace):
     global CUSTOM_COUNT
@@ -67,28 +69,28 @@ def draw_mana_cost(right_bound, top_bound, font, cost, draw):
     offset = 0
     color_list = []
     for i in range(len(cost)):
-        char = cost[::-1][i]
+        char = cost[i]
         if char in MANA_COLOR.keys():
-            color = MANA_COLOR[char]
-            if cost[::-1][i - 1] != '/':
-                color_list[-1] = color
-            if cost[::-1][i - 2] == PHYREXIAN:
-                color_list[-1] = color
-                color_list[-2] = color
-                color_list[-3] = color
-
-        elif char == '{':
-            color = color_list[-1]
+            color_list.append(MANA_COLOR[char])
+            if cost[i - 1] == '{':
+                color_list[i - 1] = MANA_COLOR[char]
+        elif char in ['}', '/', 'P']:
+            color_list.append(color_list[i - 1])
         else:
-            color = TEXT_COLOR
-        color_list.append(color)
-    for i in range(len(color_list)):
-        offset += draw.textlength(cost[::-1][i], font=font)
+            color_list.append(TEXT_COLOR)
+    matches = re.search('\\w/P', cost)
+    if matches:
+        match = matches.group()
+        i = cost.index(match)
+        color_list.pop(i)
+        color_list.pop(i)
+        cost = re.sub(r"\w/P", PHYREXIAN, cost)
+    cost = cost[::-1]
+    color_list.reverse()
+    for i in range(len(cost)):
+        offset += draw.textlength(cost[i], font=font)
         draw.text(
-            (right_bound - offset, top_bound),
-            cost[::-1][i],
-            font=font,
-            fill=color_list[i]
+            (right_bound - offset, top_bound), cost[i], font=font, fill=color_list[i]
         )
     return offset
 
@@ -119,12 +121,18 @@ with open('../input.csv', 'r') as file:
     size_large = 85
     size_medium = 65
     size_small = 60
-    font_large = ImageFont.truetype('../resources/Hack-Bold.ttf', size_large)
-    font_medium_bold = ImageFont.truetype('../resources/Hack-Bold.ttf', size_medium)
-    font_medium = ImageFont.truetype('../resources/Hack-Regular.ttf', size_medium)
-    font_medium_italic = ImageFont.truetype('../resources/Hack-Italic.ttf', size_medium)
-    font_small = ImageFont.truetype('../resources/Hack-Regular.ttf', size_small)
-    font_small_italic = ImageFont.truetype('../resources/Hack-Italic.ttf', size_small)
+    font_large = ImageFont.truetype('../resources/RobotoMono-Bold.ttf', size_large)
+    font_medium_bold = ImageFont.truetype(
+        '../resources/RobotoMono-Bold.ttf', size_medium
+    )
+    font_medium = ImageFont.truetype('../resources/RobotoMono-Regular.ttf', size_medium)
+    font_medium_italic = ImageFont.truetype(
+        '../resources/RobotoMono-Italic.ttf', size_medium
+    )
+    font_small = ImageFont.truetype('../resources/RobotoMono-Regular.ttf', size_small)
+    font_small_italic = ImageFont.truetype(
+        '../resources/RobotoMono-Italic.ttf', size_small
+    )
 
     if not os.path.exists('../pixel'):
         os.makedirs('../pixel')
@@ -174,11 +182,11 @@ with open('../input.csv', 'r') as file:
 
                 if face.LAYOUT is Layout.SAGA:
                     vert_offset = 570 - BOTTOM_OFFSET + 70
-                    hor_offset = -DPI * .5
+                    hor_offset = -DPI * 0.5
 
                 if face.LAYOUT is Layout.CLASS:
                     vert_offset = 570 - BOTTOM_OFFSET + 70
-                    hor_offset = DPI * .5
+                    hor_offset = DPI * 0.5
 
                 custom_art = custom_art.resize(
                     (int(custom_art.width * 22), int(custom_art.height * 22)),
@@ -426,13 +434,16 @@ with open('../input.csv', 'r') as file:
 
                 if face.ORACLE_TEXT:
                     draw.text(
-                        (MARGIN + 80, MARGIN + DPI*1/8),
+                        (MARGIN + 80, MARGIN + DPI * 1 / 8),
                         face.ORACLE_TEXT[0],
                         font=font_medium,
                         fill=TEXT_COLOR
                     )
                     flip_draw.text(
-                        (MARGIN + 80, MARGIN + DPI*1/8 + CENTER_GAP + BOTTOM_OFFSET),
+                        (
+                            MARGIN + 80,
+                            MARGIN + DPI * 1 / 8 + CENTER_GAP + BOTTOM_OFFSET
+                        ),
                         face.ORACLE_TEXT[1],
                         font=font_medium,
                         fill=TEXT_COLOR
