@@ -4,6 +4,9 @@ from textwrap import wrap
 from typing import Optional
 import requests, re
 
+HEADERS = {
+    'User-Agent': 'PyPixelatedProxies/1.0'
+}
 API_DELAY = .5
 LAST_FETCH = 0.0
 # COMMENT OUT TO SHOW REMINDER TEXT
@@ -149,9 +152,14 @@ class CardInfo:
         time_since_last = time.time() - LAST_FETCH
         if time_since_last < API_DELAY:
             time.sleep(API_DELAY - time_since_last)
-        card_info = requests.get(CARD_URL).json()
+        card_info = requests.get(CARD_URL, headers=HEADERS)
+        if not card_info.ok:
+            print(card_info)
+            exit()
+        else:
+            card_info = card_info.json()
         LAST_FETCH = time.time()
-         
+
         layout = Layout(card_info['layout'])
         self.LAYOUT = layout
         self.SET_CODE = str(card_info['set']).upper()
@@ -197,5 +205,5 @@ class CardInfo:
 
     def get_set_count(self, code):
         SET_URL = f"https://api.scryfall.com/sets/{code}"
-        set_count = requests.get(SET_URL).json()['card_count']
+        set_count = requests.get(SET_URL, headers=HEADERS).json()['card_count']
         return set_count

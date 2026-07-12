@@ -6,7 +6,6 @@ import requests
 from PIL import Image, ImageEnhance, ImageDraw, ImageFont
 from card_info import *
 from tqdm import tqdm
-import piltextbox
 
 DPI = 900
 
@@ -43,7 +42,7 @@ def download_art_crop(face: CardFace):
     time_since_last = time.time() - LAST_FETCH
     if time_since_last < API_DELAY:
         time.sleep(API_DELAY - time_since_last)
-    img = Image.open(requests.get(face.ART, stream=True).raw)
+    img = Image.open(requests.get(face.ART, stream=True, headers=HEADERS).raw)
     LAST_FETCH = time.time()
 
     img.save(f'../art_crops/{face.PATH}.jpg')
