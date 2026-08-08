@@ -26,13 +26,13 @@ MANA_B_COLOR = (127, 72, 127)
 MANA_R_COLOR = (210, 82, 71)
 MANA_G_COLOR = (80, 177, 111)
 MANA_COLOR = {
-    'W': MANA_W_COLOR,
-    'U': MANA_U_COLOR,
-    'B': MANA_B_COLOR,
-    'R': MANA_R_COLOR,
-    'G': MANA_G_COLOR
+    "W": MANA_W_COLOR,
+    "U": MANA_U_COLOR,
+    "B": MANA_B_COLOR,
+    "R": MANA_R_COLOR,
+    "G": MANA_G_COLOR,
 }
-PHYREXIAN = 'Φ'
+PHYREXIAN = "Φ"
 
 
 def download_art_crop(face: CardFace):
@@ -45,22 +45,22 @@ def download_art_crop(face: CardFace):
     img = Image.open(requests.get(face.ART, stream=True, headers=HEADERS).raw)
     LAST_FETCH = time.time()
 
-    img.save(f'../art_crops/{face.PATH}.jpg')
+    img.save(f"../art_crops/{face.PATH}.jpg")
     DOWN_COUNT += 1
 
 
 def generate_custom_art(face: CardFace):
     global CUSTOM_COUNT
-    with Image.open(f'../art_crops/{face.PATH}.jpg') as art_crop:
+    with Image.open(f"../art_crops/{face.PATH}.jpg") as art_crop:
         pixel = art_crop.resize(
             (int(art_crop.width / 8), int(art_crop.height / 8)),
-            resample=Image.Resampling.HAMMING
+            resample=Image.Resampling.HAMMING,
         )
 
         pixel = ImageEnhance.Contrast(pixel).enhance(1.2)
         pixel = ImageEnhance.Color(pixel).enhance(1.2)
 
-    pixel.save(f'../pixel/{face.PATH}.png')
+    pixel.save(f"../pixel/{face.PATH}.png")
 
     CUSTOM_COUNT += 1
 
@@ -72,22 +72,22 @@ def draw_mana_cost(right_bound, top_bound, font, cost, draw):
         char = cost[i]
         if char in MANA_COLOR.keys():
             color_list.append(MANA_COLOR[char])
-            if cost[i - 1] == '{':
+            if cost[i - 1] == "{":
                 color_list[i - 1] = MANA_COLOR[char]
-            elif cost[i - 1] == '/':
+            elif cost[i - 1] == "/":
                 R1, G1, B1 = MANA_COLOR[char]
                 R2, G2, B2 = color_list[i - 1]
                 mix_color = (
                     int(sqrt((R1**2 + R2**2) / 2).real),
                     int(sqrt((G1**2 + G2**2) / 2).real),
-                    int(sqrt((B1**2 + B2**2) / 2).real)
+                    int(sqrt((B1**2 + B2**2) / 2).real),
                 )
                 color_list[i - 1] = mix_color
-        elif char in ['}', '/', 'P']:
+        elif char in ["}", "/", "P"]:
             color_list.append(color_list[i - 1])
         else:
             color_list.append(TEXT_COLOR)
-    matches = re.search('\\w/P', cost)
+    matches = re.search("\\w/P", cost)
     if matches:
         matched = matches.group()
         i = cost.index(matched)
@@ -99,61 +99,67 @@ def draw_mana_cost(right_bound, top_bound, font, cost, draw):
     for i in range(len(cost)):
         offset += draw.textlength(cost[i], font=font)
         draw.text(
-            (right_bound - offset, top_bound), cost[i], font=font, fill=color_list[i]
+            (right_bound - offset, top_bound),
+            cost[i],
+            font=font,
+            fill=color_list[i],
+            anchor="ls",
         )
     return offset
 
 
 def draw_oracle_text(left_bound, top_bound, font_size, font, oracle_text, draw):
-    oracle_text = oracle_text.split('\n')
+    oracle_text = oracle_text.split("\n")
     oracle_vert_offset = 0
     for line in oracle_text:
         offset = 0
-        broken_line = re.split(r'{|}', line)
+        broken_line = re.split(r"{|}", line)
         for part in broken_line:
             color = TEXT_COLOR
-            if len(part) == 1 and part not in ['.', '(', ')']:
+            if len(part) == 1 and part not in [".", "(", ")"]:
                 if part in MANA_COLOR.keys():
                     color = MANA_COLOR[part]
-                part = '{' + part + '}'
+                part = "{" + part + "}"
             draw.text(
                 (left_bound + offset, top_bound + oracle_vert_offset),
                 part,
                 font=font,
-                fill=color
+                fill=color,
+                anchor="ls",
             )
             offset += draw.textlength(part, font=font)
         oracle_vert_offset += font_size + 4
 
 
-with open('../input.csv', 'r') as file:
+with open("../input.csv", "r") as file:
     size_large = 85
     size_medium = 65
     size_small = 60
-    font_large = ImageFont.truetype('../resources/RobotoMono-Bold.ttf', size_large)
-    font_medium_bold = ImageFont.truetype(
-        '../resources/RobotoMono-Bold.ttf', size_medium
-    )
-    font_medium = ImageFont.truetype('../resources/RobotoMono-Regular.ttf', size_medium)
+    font_large = ImageFont.truetype("../resources/RobotoMono-Bold.ttf", size_large)
+    font_medium = ImageFont.truetype("../resources/RobotoMono-Regular.ttf", size_medium)
     font_medium_italic = ImageFont.truetype(
-        '../resources/RobotoMono-Italic.ttf', size_medium
+        "../resources/RobotoMono-Italic.ttf", size_medium
     )
-    font_small = ImageFont.truetype('../resources/RobotoMono-Regular.ttf', size_small)
-    font_small_italic = ImageFont.truetype(
-        '../resources/RobotoMono-Italic.ttf', size_small
+    font_medium_bold = ImageFont.truetype(
+        "../resources/RobotoMono-Bold.ttf", size_medium
     )
 
-    if not os.path.exists('../pixel'):
-        os.makedirs('../pixel')
-    if not os.path.exists('../art_crops'):
-        os.makedirs('../art_crops')
-    if not os.path.exists('../cards'):
-        os.makedirs('../cards')
+    font_small = ImageFont.truetype("../resources/RobotoMono-Regular.ttf", size_small)
+    font_small_italic = ImageFont.truetype(
+        "../resources/RobotoMono-Italic.ttf", size_small
+    )
+    font_small_bold = ImageFont.truetype("../resources/RobotoMono-Bold.ttf", size_small)
+    if not os.path.exists("../pixel"):
+        os.makedirs("../pixel")
+    if not os.path.exists("../art_crops"):
+        os.makedirs("../art_crops")
+    if not os.path.exists("../cards"):
+        os.makedirs("../cards")
 
     for line in tqdm(file.readlines()):
-        line = line.strip().split(',')
-        if line[0].startswith('plst'):
-            code, num = line[1].split('-')
+        line = line.strip().split(",")
+        if line[0].startswith("plst"):
+            code, num = line[1].split("-")
         else:
             code, num = line
 
@@ -167,14 +173,14 @@ with open('../input.csv', 'r') as file:
             elif not os.path.exists(f"../pixel/{face.PATH}.png"):
                 generate_custom_art(face)
 
-            card_img = Image.new('RGB', (WIDTH, HEIGHT), BACKGROUND_COLOR)
+            card_img = Image.new("RGB", (WIDTH, HEIGHT), BACKGROUND_COLOR)
 
-            title_prefix = '> '
-            if 'Legendary' in face.TYPE_LINE[0]:
-                title_prefix = '# '
+            title_prefix = "> "
+            if "Legendary" in face.TYPE_LINE[0]:
+                title_prefix = "# "
 
             # PASTE IMAGE
-            with Image.open(f'../pixel/{face.PATH}.png') as custom_art:
+            with Image.open(f"../pixel/{face.PATH}.png") as custom_art:
                 vert_offset = 0
                 hor_offset = 0
 
@@ -199,10 +205,10 @@ with open('../input.csv', 'r') as file:
 
                 custom_art = custom_art.resize(
                     (int(custom_art.width * 22), int(custom_art.height * 22)),
-                    resample=Image.Resampling.NEAREST
+                    resample=Image.Resampling.NEAREST,
                 )
 
-                if 'Planeswalker' in face.TYPE_LINE[0]:
+                if "Planeswalker" in face.TYPE_LINE[0]:
                     vert_offset = custom_art.height / 2 - (DPI * 3 / 4)
 
                 card_img.paste(
@@ -211,8 +217,8 @@ with open('../input.csv', 'r') as file:
                         int(((WIDTH) / 2) - (custom_art.width / 2) - hor_offset),
                         int(
                             ((HEIGHT) / 2) - (custom_art.height / 2) - 570 + vert_offset
-                        )
-                    )
+                        ),
+                    ),
                 )
 
             # SETUP DRAW OBJECT
@@ -221,7 +227,7 @@ with open('../input.csv', 'r') as file:
             # DEFAULT LAYOUT
             if face.LAYOUT in [Layout.NORMAL, Layout.TRANSFORM, Layout.DUAL_FACE]:
                 offset = draw_mana_cost(
-                    WIDTH - MARGIN, MARGIN, font_large, face.MANA_COST[0], draw
+                    WIDTH - MARGIN, MARGIN + size_large, font_large, face.MANA_COST[0], draw
                 )
                 if draw.textlength(title_prefix + face.NAME[0], font_large) + offset > (
                     WIDTH - MARGIN * 2
@@ -230,21 +236,23 @@ with open('../input.csv', 'r') as file:
                 else:
                     size = font_large
                 draw.text(
-                    (MARGIN, MARGIN + (size_large / 2 - size.size / 2)),
+                    (MARGIN, MARGIN + size_large),
                     title_prefix + face.NAME[0],
                     font=size,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
                 text_offset = 0
-                if 'Planeswalker' in face.TYPE_LINE[0]:
+                if "Planeswalker" in face.TYPE_LINE[0]:
                     text_offset = custom_art.height - DPI * (1.55)
-                    loyalty = '[' + face.LOYALTY + ']'
+                    loyalty = "[" + face.LOYALTY + "]"
                     loyal_len = draw.textlength(loyalty, font=font_large)
                     draw.text(
                         (WIDTH / 2 - loyal_len / 2, HEIGHT - MARGIN - DPI / 6),
                         loyalty,
                         fill=TEXT_COLOR,
-                        font=font_large
+                        font=font_large,
+                        anchor="ls",
                     )
                 if not face.TEXTLESS:
                     type_len = draw.textlength(face.TYPE_LINE[0], font=font_large)
@@ -255,11 +263,12 @@ with open('../input.csv', 'r') as file:
                     draw.text(
                         (
                             MARGIN,
-                            DPI * 1.95 + text_offset + (size_large / 2 - size.size / 2)
+                            DPI * 1.95 + text_offset + (size_large / 2 - size.size / 2),
                         ),
                         face.TYPE_LINE[0],
                         font=size,
-                        fill=TEXT_COLOR
+                        fill=TEXT_COLOR,
+                        anchor="ls",
                     )
                     if face.ORACLE_TEXT:
                         draw_oracle_text(
@@ -268,7 +277,7 @@ with open('../input.csv', 'r') as file:
                             size_medium,
                             font_medium,
                             face.ORACLE_TEXT[0],
-                            draw
+                            draw,
                         )
 
                 if face.FLAVOR_TEXT:
@@ -277,36 +286,38 @@ with open('../input.csv', 'r') as file:
                             MARGIN + 80,
                             DPI * 2.1
                             + text_offset
-                            + (face.ORACLE_TEXT[0].count('\n') + 1.5) * size_medium
+                            + (face.ORACLE_TEXT[0].count("\n") + 1.5) * size_medium,
                         ),
                         face.FLAVOR_TEXT[0],
                         font=font_medium_italic,
                         fill=TEXT_COLOR,
-                        spacing=10
+                        spacing=10,
+                        anchor="ls",
                     )
 
                 if face.LAYOUT == Layout.DUAL_FACE:
                     draw.text(
                         (MARGIN, HEIGHT - MARGIN - size_small * 2 - size_medium - 60),
-                        '< ' + face.ALTERNATE_TYPE,
+                        "< " + face.ALTERNATE_TYPE,
                         font=font_medium_bold,
-                        fill=TEXT_COLOR
+                        fill=TEXT_COLOR,
+                        anchor="ls",
                     )
 
             # SPLIT LAYOUT (Ex. ROOMS)
             elif face.LAYOUT is Layout.SPLIT:
-                rot_image = Image.new('RGBA', (HEIGHT, WIDTH), (0, 0, 0, 0))
+                rot_image = Image.new("RGBA", (HEIGHT, WIDTH), (0, 0, 0, 0))
                 rot_draw = ImageDraw.Draw(rot_image)
                 rot_draw.text(
                     (MARGIN + BOTTOM_OFFSET, MARGIN),
                     title_prefix + face.NAME[0],
                     font=font_large,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
                 )
                 rot_draw.text(
                     (HEIGHT / 2 + CENTER_GAP, MARGIN),
                     title_prefix + face.NAME[1],
-                    font=font_large
+                    font=font_large,
                 )
 
                 draw_mana_cost(
@@ -314,7 +325,7 @@ with open('../input.csv', 'r') as file:
                     MARGIN,
                     font_large,
                     face.MANA_COST[0],
-                    rot_draw
+                    rot_draw,
                 )
                 draw_mana_cost(
                     HEIGHT - MARGIN, MARGIN, font_large, face.MANA_COST[1], rot_draw
@@ -323,13 +334,13 @@ with open('../input.csv', 'r') as file:
                     (MARGIN + BOTTOM_OFFSET, DPI * 1.625),
                     face.TYPE_LINE[0],
                     font=font_medium_bold,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
                 )
                 rot_draw.text(
                     (HEIGHT / 2 + CENTER_GAP, DPI * 1.625),
                     face.TYPE_LINE[1],
                     font=font_medium_bold,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
                 )
 
                 if face.ORACLE_TEXT:
@@ -339,7 +350,7 @@ with open('../input.csv', 'r') as file:
                         size_medium,
                         font_medium,
                         face.ORACLE_TEXT[0],
-                        rot_draw
+                        rot_draw,
                     )
                     draw_oracle_text(
                         HEIGHT / 2 + CENTER_GAP,
@@ -347,88 +358,102 @@ with open('../input.csv', 'r') as file:
                         size_medium,
                         font_medium,
                         face.ORACLE_TEXT[1],
-                        rot_draw
+                        rot_draw,
                     )
                 rot_image = rot_image.rotate(90, expand=True)
                 card_img.paste(rot_image, mask=rot_image)
 
-            # ADVENTURE LAYOUT
-            elif face.LAYOUT is Layout.ADVENTURE:
+            # ADVENTURE/PREPARE LAYOUT
+            elif face.LAYOUT is Layout.ADVENTURE or face.LAYOUT is Layout.PREPARE:
                 draw.text(
                     (MARGIN, MARGIN), title_prefix + face.NAME[0], font=font_large
                 )
                 draw_mana_cost(
-                    WIDTH - MARGIN, MARGIN, font_large, face.MANA_COST[0], draw
+                    WIDTH - MARGIN, MARGIN + size_large, font_large, face.MANA_COST[0], draw
                 )
+                LEFT = MARGIN
+                RIGHT = WIDTH / 2 + CENTER_GAP
+                MANA_OFFSET = WIDTH / 2 - CENTER_GAP
+
+                if face.LAYOUT is Layout.PREPARE:
+                    RIGHT = MARGIN
+                    LEFT = WIDTH / 2 + CENTER_GAP
+                    MANA_OFFSET = WIDTH - MARGIN
 
                 draw.text(
                     (MARGIN, DPI * 1.95),
                     face.TYPE_LINE[0],
                     font=font_large,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
 
                 if face.ORACLE_TEXT:
                     draw_oracle_text(
-                        WIDTH / 2 + CENTER_GAP,
-                        DPI * 2.2,
+                        RIGHT,
+                        DPI * 2.175,
                         size_medium,
                         font_medium,
                         face.ORACLE_TEXT[0],
-                        draw
+                        draw,
                     )
                     draw_oracle_text(
-                        MARGIN,
+                        LEFT,
                         DPI * 2.4,
                         size_medium,
                         font_medium,
                         face.ORACLE_TEXT[1],
-                        draw
+                        draw,
                     )
                 if face.FLAVOR_TEXT:
                     draw.text(
                         (
-                            WIDTH / 2 + CENTER_GAP,
+                            RIGHT,
                             DPI * 2.2
-                            + (face.ORACLE_TEXT[0].count('\n') + 1.5)
-                            * font_medium.size
+                            + (face.ORACLE_TEXT[0].count("\n") + 1.5)
+                            * font_medium.size,
                         ),
                         face.FLAVOR_TEXT[0],
                         font=font_medium_italic,
-                        fill=TEXT_COLOR
+                        fill=TEXT_COLOR,
+                        anchor="ls",
                     )
 
                 draw.text(
-                    (MARGIN, DPI * 2.125),
+                    (LEFT, DPI * 2.175),
                     title_prefix + face.NAME[1],
-                    font=font_medium_bold,
-                    fill=TEXT_COLOR
+                    font=(
+                        font_small_bold
+                        if len(title_prefix + face.NAME[1] + face.MANA_COST[1]) > 20
+                        else font_medium_bold
+                    ),
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
+
                 draw_mana_cost(
-                    WIDTH / 2 - CENTER_GAP,
-                    DPI * 2.125,
-                    font_medium_bold,
-                    face.MANA_COST[1],
-                    draw
+                    MANA_OFFSET, DPI * 2.175, font_medium_bold, face.MANA_COST[1], draw
                 )
 
                 draw.text(
-                    (MARGIN, DPI * 2.25),
+                    (LEFT, DPI * 2.25),
                     face.TYPE_LINE[1],
                     font=font_medium_bold,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
 
             # FLIP LAYOUT
             elif face.LAYOUT is Layout.FLIP:
-                flip_image = Image.new('RGBA', (WIDTH, HEIGHT), (0, 0, 0, 0))
+                flip_image = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
                 flip_draw = ImageDraw.Draw(flip_image)
 
                 draw.text(
                     (MARGIN, MARGIN),
                     title_prefix + face.NAME[0],
                     font=font_large,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
                 draw_mana_cost(
                     WIDTH - MARGIN, MARGIN, font_large, face.MANA_COST[0], draw
@@ -438,7 +463,8 @@ with open('../input.csv', 'r') as file:
                     (MARGIN, DPI * 0.875),
                     face.TYPE_LINE[0],
                     font=font_medium_bold,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
 
                 if face.ORACLE_TEXT:
@@ -446,50 +472,56 @@ with open('../input.csv', 'r') as file:
                         (MARGIN + 80, MARGIN + DPI * 1 / 8),
                         face.ORACLE_TEXT[0],
                         font=font_medium,
-                        fill=TEXT_COLOR
+                        fill=TEXT_COLOR,
+                        anchor="ls",
                     )
                     flip_draw.text(
                         (
                             MARGIN + 80,
-                            MARGIN + DPI * 1 / 8 + CENTER_GAP + BOTTOM_OFFSET
+                            MARGIN + DPI * 1 / 8 + CENTER_GAP + BOTTOM_OFFSET,
                         ),
                         face.ORACLE_TEXT[1],
                         font=font_medium,
-                        fill=TEXT_COLOR
+                        fill=TEXT_COLOR,
+                        anchor="ls",
                     )
 
                 if face.POWER and face.TOUGHNESS:
-                    creature_text = f'({face.POWER[0]}/{face.TOUGHNESS[0]})'
+                    creature_text = f"({face.POWER[0]}/{face.TOUGHNESS[0]})"
                     text_len = draw.textlength(creature_text, font=font_large)
                     draw.text(
                         (WIDTH - MARGIN - text_len, DPI * 0.875 - 20),
                         creature_text,
                         font=font_large,
-                        fill=TEXT_COLOR
+                        fill=TEXT_COLOR,
+                        anchor="ls",
                     )
-                    creature_text = f'({face.POWER[1]}/{face.TOUGHNESS[1]})'
+                    creature_text = f"({face.POWER[1]}/{face.TOUGHNESS[1]})"
                     text_len = draw.textlength(creature_text, font=font_large)
                     flip_draw.text(
                         (
                             WIDTH - MARGIN - text_len,
-                            DPI * 0.875 + CENTER_GAP + BOTTOM_OFFSET * 1.5 - 20
+                            DPI * 0.875 + CENTER_GAP + BOTTOM_OFFSET * 1.5 - 20,
                         ),
                         creature_text,
                         font=font_large,
-                        fill=TEXT_COLOR
+                        fill=TEXT_COLOR,
+                        anchor="ls",
                     )
 
                 flip_draw.text(
                     (MARGIN, MARGIN + CENTER_GAP + BOTTOM_OFFSET),
                     title_prefix + face.NAME[1],
                     font=font_large,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
                 flip_draw.text(
                     (MARGIN, DPI * 0.875 + CENTER_GAP + BOTTOM_OFFSET * 1.5),
                     face.TYPE_LINE[1],
                     font=font_medium_bold,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
                 flip_image = flip_image.rotate(180)
                 card_img.paste(flip_image, mask=flip_image)
@@ -505,7 +537,8 @@ with open('../input.csv', 'r') as file:
                     (MARGIN, MARGIN),
                     title_prefix + face.NAME[0],
                     font=font_large,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
                 draw_mana_cost(
                     WIDTH - MARGIN, MARGIN, font_large, face.MANA_COST[0], draw
@@ -518,50 +551,52 @@ with open('../input.csv', 'r') as file:
                         size_medium,
                         font_medium,
                         face.ORACLE_TEXT[0],
-                        draw
+                        draw,
                     )
                 draw.text(
                     (MARGIN, DPI * 2.95),
                     face.TYPE_LINE[0],
                     font=font_large,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
 
             # DRAW BOTTOM INFO
             if True:
                 draw.text(
                     (MARGIN, HEIGHT - MARGIN - size_small * 2),
-                    f'{card.CARD_NUMBER}/{card.SET_COUNT} {card.RARITY.name}\n{card.SET_CODE} >{card.ARTIST}',
+                    f"{card.CARD_NUMBER}/{card.SET_COUNT} {card.RARITY.name}\n{card.SET_CODE} >{card.ARTIST}",
                     font=font_small,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="ls",
                 )
 
                 txt_string = codecs.decode(
-                    bytes.fromhex('5962666744686e666e65204365626b6c').decode('utf-8'),
-                    'rot13'
+                    bytes.fromhex("5962666744686e666e65204365626b6c").decode("utf-8"),
+                    "rot13",
                 )
-                text_len = draw.textlength(txt_string, font=font_small_italic)
                 draw.text(
-                    (WIDTH - MARGIN - text_len, HEIGHT - MARGIN - size_small),
+                    (WIDTH - MARGIN, HEIGHT - MARGIN - size_small),
                     txt_string,
                     font=font_small_italic,
-                    fill=TEXT_COLOR
+                    fill=TEXT_COLOR,
+                    anchor="rs",
                 )
                 # DRAW POWER AND TOUGHNESS FOR DEFAULT LAYOUT
                 if face.POWER and face.TOUGHNESS and face.LAYOUT is not Layout.FLIP:
-                    creature_text = f'({face.POWER[0]}/{face.TOUGHNESS[0]})'
-                    text_len = draw.textlength(creature_text, font=font_large)
+                    creature_text = f"({face.POWER[0]}/{face.TOUGHNESS[0]})"
                     draw.text(
                         (
-                            WIDTH - MARGIN - text_len,
-                            HEIGHT - MARGIN - (size_large + size_small + 30)
+                            WIDTH - MARGIN,
+                            HEIGHT - MARGIN - (size_large + size_small + 30),
                         ),
                         creature_text,
                         font=font_large,
-                        fill=TEXT_COLOR
+                        fill=TEXT_COLOR,
+                        anchor="rs",
                     )
 
-            card_img.save(f'../cards/{face.PATH}.png')
+            card_img.save(f"../cards/{face.PATH}.png")
             GEN_COUNT += 1
 
 print(f"Downloaded: {DOWN_COUNT} art crops")
