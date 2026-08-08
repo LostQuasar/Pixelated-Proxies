@@ -449,14 +449,14 @@ with open("../input.csv", "r") as file:
                 flip_draw = ImageDraw.Draw(flip_image)
 
                 draw.text(
-                    (MARGIN, MARGIN),
+                    (MARGIN, MARGIN + size_large),
                     title_prefix + face.NAME[0],
                     font=font_large,
                     fill=TEXT_COLOR,
                     anchor="ls",
                 )
                 draw_mana_cost(
-                    WIDTH - MARGIN, MARGIN, font_large, face.MANA_COST[0], draw
+                    WIDTH - MARGIN, MARGIN + size_large, font_large, face.MANA_COST[0], draw
                 )
 
                 draw.text(
@@ -469,7 +469,7 @@ with open("../input.csv", "r") as file:
 
                 if face.ORACLE_TEXT:
                     draw.text(
-                        (MARGIN + 80, MARGIN + DPI * 1 / 8),
+                        (MARGIN + DPI * 1/8 , MARGIN + DPI * 1 / 4),
                         face.ORACLE_TEXT[0],
                         font=font_medium,
                         fill=TEXT_COLOR,
@@ -477,8 +477,8 @@ with open("../input.csv", "r") as file:
                     )
                     flip_draw.text(
                         (
-                            MARGIN + 80,
-                            MARGIN + DPI * 1 / 8 + CENTER_GAP + BOTTOM_OFFSET,
+                            MARGIN + DPI * 1 / 8,
+                            MARGIN + DPI * 1 / 4 + CENTER_GAP + BOTTOM_OFFSET,
                         ),
                         face.ORACLE_TEXT[1],
                         font=font_medium,
@@ -490,7 +490,7 @@ with open("../input.csv", "r") as file:
                     creature_text = f"({face.POWER[0]}/{face.TOUGHNESS[0]})"
                     text_len = draw.textlength(creature_text, font=font_large)
                     draw.text(
-                        (WIDTH - MARGIN - text_len, DPI * 0.875 - 20),
+                        (WIDTH - MARGIN - text_len,  DPI * 0.875),
                         creature_text,
                         font=font_large,
                         fill=TEXT_COLOR,
@@ -501,7 +501,7 @@ with open("../input.csv", "r") as file:
                     flip_draw.text(
                         (
                             WIDTH - MARGIN - text_len,
-                            DPI * 0.875 + CENTER_GAP + BOTTOM_OFFSET * 1.5 - 20,
+                            DPI * 0.875 + CENTER_GAP + BOTTOM_OFFSET * 1.5,
                         ),
                         creature_text,
                         font=font_large,
@@ -564,7 +564,7 @@ with open("../input.csv", "r") as file:
             # DRAW BOTTOM INFO
             if True:
                 draw.text(
-                    (MARGIN, HEIGHT - MARGIN - size_small * 2),
+                    (MARGIN, HEIGHT - (MARGIN + size_small + 7)),
                     f"{card.CARD_NUMBER}/{card.SET_COUNT} {card.RARITY.name}\n{card.SET_CODE} >{card.ARTIST}",
                     font=font_small,
                     fill=TEXT_COLOR,
@@ -576,7 +576,7 @@ with open("../input.csv", "r") as file:
                     "rot13",
                 )
                 draw.text(
-                    (WIDTH - MARGIN, HEIGHT - MARGIN - size_small),
+                    (WIDTH - MARGIN, HEIGHT - MARGIN),
                     txt_string,
                     font=font_small_italic,
                     fill=TEXT_COLOR,
@@ -588,7 +588,7 @@ with open("../input.csv", "r") as file:
                     draw.text(
                         (
                             WIDTH - MARGIN,
-                            HEIGHT - MARGIN - (size_large + size_small + 30),
+                            HEIGHT - MARGIN - (size_large + 30),
                         ),
                         creature_text,
                         font=font_large,
