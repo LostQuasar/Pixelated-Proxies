@@ -478,7 +478,7 @@ with open("../input.csv", "r") as file:
                     flip_draw.text(
                         (
                             MARGIN + DPI * 1 / 8,
-                            MARGIN + DPI * 1 / 4 + CENTER_GAP + BOTTOM_OFFSET,
+                            MARGIN + DPI * 1 / 4 + BOTTOM_OFFSET,
                         ),
                         face.ORACLE_TEXT[1],
                         font=font_medium,
