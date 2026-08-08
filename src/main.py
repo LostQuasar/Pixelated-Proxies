@@ -184,23 +184,25 @@ with open("../input.csv", "r") as file:
                 vert_offset = 0
                 hor_offset = 0
 
+                DEFAULT_VERT_OFFSET = DPI * 2 / 3
+
                 if face.LAYOUT is Layout.SPLIT:
                     custom_art = custom_art.rotate(90, expand=True)
-                    vert_offset = 570 - 80
+                    vert_offset = DEFAULT_VERT_OFFSET - 80
                     hor_offset = 225
 
                 if face.TEXTLESS:
                     vert_offset = 500
 
                 if face.LAYOUT is Layout.FLIP:
-                    vert_offset = 570 - BOTTOM_OFFSET
+                    vert_offset = DEFAULT_VERT_OFFSET - BOTTOM_OFFSET
 
                 if face.LAYOUT is Layout.SAGA:
-                    vert_offset = 570 - BOTTOM_OFFSET + 70
+                    vert_offset = DEFAULT_VERT_OFFSET - BOTTOM_OFFSET + 70
                     hor_offset = -DPI * 0.5
 
                 if face.LAYOUT is Layout.CLASS:
-                    vert_offset = 570 - BOTTOM_OFFSET + 70
+                    vert_offset = DEFAULT_VERT_OFFSET - BOTTOM_OFFSET + 70
                     hor_offset = DPI * 0.5
 
                 custom_art = custom_art.resize(
@@ -216,7 +218,7 @@ with open("../input.csv", "r") as file:
                     (
                         int(((WIDTH) / 2) - (custom_art.width / 2) - hor_offset),
                         int(
-                            ((HEIGHT) / 2) - (custom_art.height / 2) - 570 + vert_offset
+                            ((HEIGHT) / 2) - (custom_art.height / 2) - DEFAULT_VERT_OFFSET + vert_offset
                         ),
                     ),
                 )
